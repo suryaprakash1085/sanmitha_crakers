@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Layout } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
@@ -6,15 +6,43 @@ import { ProductModal } from "@/components/ProductModal";
 import { products, type Category, type Product } from "@/data/products";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { Fireworks } from "@/components/Fireworks";
+import { useSearchParams } from "react-router-dom";
 const categories: ("All" | Category)[] = ["All", "Rockets", "Sparklers", "Fountains", "Bombs"];
 const sorts = ["Popularity", "Price: Low to High", "Price: High to Low", "Name"] as const;
 
 const Products = () => {
-  const [cat, setCat] = useState<"All" | Category>("All");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlCategory = searchParams.get("category");
+  const initialCat: "All" | Category =
+    urlCategory && (categories as string[]).includes(urlCategory) ? (urlCategory as Category) : "All";
+
+  const [cat, setCat] = useState<"All" | Category>(initialCat);
   const [search, setSearch] = useState("");
   const [maxPrice, setMaxPrice] = useState(2000);
   const [sort, setSort] = useState<(typeof sorts)[number]>("Popularity");
   const [active, setActive] = useState<Product | null>(null);
+
+  // Keep the filter in sync if the URL's ?category= changes (e.g. clicking a
+  // different category link while already on this page).
+  useEffect(() => {
+    const c = searchParams.get("category");
+    if (c && (categories as string[]).includes(c)) {
+      setCat(c as Category);
+    } else if (!c) {
+      setCat("All");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  const handleCatChange = (c: "All" | Category) => {
+    setCat(c);
+    if (c === "All") {
+      searchParams.delete("category");
+      setSearchParams(searchParams, { replace: true });
+    } else {
+      setSearchParams({ category: c }, { replace: true });
+    }
+  };
 
   const filtered = useMemo(() => {
     let r = products.filter(p =>
@@ -50,7 +78,7 @@ const Products = () => {
               <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Category</h4>
               <div className="flex flex-col gap-1 mb-6">
                 {categories.map(c => (
-                  <button key={c} onClick={() => setCat(c)}
+                  <button key={c} onClick={() => handleCatChange(c)}
                     className={`text-left px-3 py-2 rounded-xl text-sm transition ${
                       cat === c ? "bg-festive text-white shadow-soft" : "hover:bg-primary/5"
                     }`}>

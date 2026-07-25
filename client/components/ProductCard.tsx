@@ -22,38 +22,38 @@ export const ProductCard = ({ product, index = 0, onImageClick }: Props) => {
   };
 
   return (
-    <motion.article
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.5, delay: index * 0.06 }}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      className="product-card group"
-    >
-      {hover && (
-        <div className="pointer-events-none absolute inset-0">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <span
-              key={i}
-              className="absolute w-1.5 h-1.5 rounded-full"
-              style={{
-                left: `${10 + Math.random() * 80}%`,
-                top: `${10 + Math.random() * 80}%`,
-                background: `hsl(${[6,42,340,200][i%4]} 90% 65%)`,
-                boxShadow: `0 0 10px hsl(${[6,42,340,200][i%4]} 90% 65%)`,
-                animation: `spark-pop 1.2s ease-out ${i * 0.12}s infinite`,
-              }}
-            />
-          ))}
-        </div>
-      )}
+    <Tilt3D max={9} lift={16} className="h-full">
+      <motion.article
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: 0.5, delay: index * 0.06 }}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        className="product-card group h-full"
+      >
+        {hover && (
+          <div className="pointer-events-none absolute inset-0">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <span
+                key={i}
+                className="absolute w-1.5 h-1.5 rounded-full"
+                style={{
+                  left: `${10 + Math.random() * 80}%`,
+                  top: `${10 + Math.random() * 80}%`,
+                  background: `hsl(${[6,42,340,200][i%4]} 90% 65%)`,
+                  boxShadow: `0 0 10px hsl(${[6,42,340,200][i%4]} 90% 65%)`,
+                  animation: `spark-pop 1.2s ease-out ${i * 0.12}s infinite`,
+                }}
+              />
+            ))}
+          </div>
+        )}
 
-      {product.badge && (
-        <span className="glow-badge absolute top-4 left-4 z-10">{product.badge}</span>
-      )}
+        {product.badge && (
+          <span className="glow-badge absolute top-4 left-4 z-10">{product.badge}</span>
+        )}
 
-      <Tilt3D max={7} lift={10} className="w-full">
         <button
           type="button"
           onClick={() => onImageClick?.(product)}
@@ -66,7 +66,6 @@ export const ProductCard = ({ product, index = 0, onImageClick }: Props) => {
             className="h-40 object-contain transition-transform duration-500 group-hover:scale-110 group-hover:-translate-y-1 drop-shadow-lg"
           />
         </button>
-      </Tilt3D>
 
       <h3 className="font-display font-semibold text-lg mb-1">{product.name}</h3>
       <p className="text-xs text-muted-foreground mb-3">{product.category}</p>
@@ -74,7 +73,8 @@ export const ProductCard = ({ product, index = 0, onImageClick }: Props) => {
         <span className="font-display font-bold text-xl text-gradient-festive">₹{product.price}</span>
         <button
           onClick={handleAdd}
-          className="relative inline-flex items-center gap-1.5 rounded-lg bg-primary text-white text-sm font-semibold px-4 py-2 hover:bg-[hsl(20,92%,48%)] transition-colors overflow-visible"
+          style={{ background: ["hsl(330 82% 60%)", "hsl(20 92% 55%)", "hsl(265 70% 58%)"][index % 3] }}
+          className="relative inline-flex items-center gap-1.5 rounded-lg text-white text-sm font-semibold px-4 py-2 hover:brightness-95 transition-all overflow-visible"
         >
           <ShoppingCart className="w-3.5 h-3.5" />
           Add
@@ -102,6 +102,7 @@ export const ProductCard = ({ product, index = 0, onImageClick }: Props) => {
           )}
         </button>
       </div>
-    </motion.article>
+      </motion.article>
+    </Tilt3D>
   );
 };

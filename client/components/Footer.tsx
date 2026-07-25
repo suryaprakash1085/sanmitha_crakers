@@ -27,7 +27,10 @@ export const Footer = () => (
       <div className="container-festive grid gap-8 sm:grid-cols-2 lg:grid-cols-5 py-12 px-4 md:px-8">
         {features.map((f, i) => (
           <div key={i} className="flex items-start gap-3">
-            <div className="w-12 h-12 shrink-0 rounded-full grid place-items-center border-2 border-primary/70 text-primary">
+            <div
+              className="w-12 h-12 shrink-0 rounded-full grid place-items-center text-white"
+              style={{ background: ["hsl(330 82% 60%)", "hsl(200 85% 55%)", "hsl(42 92% 55%)", "hsl(20 92% 55%)", "hsl(330 82% 60%)"][i % 5] }}
+            >
               <f.icon className="w-5 h-5" />
             </div>
             <div>
@@ -40,11 +43,11 @@ export const Footer = () => (
     </div>
 
     {/* Main footer */}
-    <div className="bg-[hsl(222,25%,10%)] text-white">
-      <div className="container-festive section-pad !py-14 grid gap-10 md:grid-cols-4 px-4 md:px-8">
-        <div>
+    <div className="bg-[hsl(273,45%,16%)] text-white">
+      <div className="container-festive section-pad !py-14 grid gap-10 md:grid-cols-2 lg:grid-cols-5 px-4 md:px-8">
+        <div className="lg:col-span-1">
           <Link to="/" className="flex items-center gap-2 mb-3">
-            <div className="w-9 h-9 rounded-full bg-primary grid place-items-center">
+            <div className="w-9 h-9 rounded-full bg-festive grid place-items-center">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <span className="font-display font-extrabold text-xl text-white uppercase">
@@ -83,6 +86,14 @@ export const Footer = () => (
           </ul>
         </div>
         <div>
+          <h4 className="font-display font-semibold mb-3 text-white">Customer Service</h4>
+          <ul className="space-y-2 text-sm text-white/60">
+            {["My Orders", "Shipping Policy", "Returns & Refunds", "FAQ", "Track Order"].map((l) => (
+              <li key={l}><a href="#" className="hover:text-primary transition">{l}</a></li>
+            ))}
+          </ul>
+        </div>
+        <div>
           <h4 className="font-display font-semibold mb-3 text-white">Newsletter</h4>
           <p className="text-sm text-white/60 mb-3">Get festive offers in your inbox.</p>
           <form className="flex gap-2">
@@ -97,8 +108,17 @@ export const Footer = () => (
           </form>
         </div>
       </div>
-      <div className="border-t border-white/10 py-5 text-center text-xs text-white/50">
-        © {new Date().getFullYear()} Star Fireworks. Celebrating with you, safely.
+      <div className="border-t border-white/10 py-5 px-4 flex flex-col sm:flex-row items-center justify-between gap-3 container-festive">
+        <span className="text-xs text-white/50">
+          © {new Date().getFullYear()} Star Fireworks. All rights reserved.
+        </span>
+        <div className="flex gap-2">
+          {["Visa", "Mastercard", "UPI", "Paytm"].map((p) => (
+            <span key={p} className="text-[10px] font-semibold px-2.5 py-1 rounded-md bg-white/10 text-white/70">
+              {p}
+            </span>
+          ))}
+        </div>
       </div>
     </div>
   </footer>

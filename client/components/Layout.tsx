@@ -5,7 +5,7 @@ import { Fireworks } from "./Fireworks";
 import { FloatingSparks } from "./FloatingSparks";
 
 export const Layout = ({ children }: { children: ReactNode }) => (
-  <div className="relative min-h-screen bg-white overflow-hidden">
+  <div className="relative min-h-screen bg-white overflow-x-hidden">
     {/* Background bursts — subtle, sits behind all page content */}
     <Fireworks />
     <Navbar />

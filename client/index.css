@@ -45,8 +45,8 @@
 
     /* Gradients */
     --gradient-sky: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(220 25% 98%) 100%);
-    --gradient-festive: linear-gradient(135deg, hsl(30 96% 58%) 0%, hsl(20 92% 52%) 55%, hsl(12 88% 48%) 100%);
-    --gradient-pink: linear-gradient(135deg, hsl(24 93% 53%), hsl(14 90% 50%));
+    --gradient-festive: linear-gradient(135deg, hsl(330 82% 60%) 0%, hsl(20 92% 55%) 100%);
+    --gradient-pink: linear-gradient(135deg, hsl(280 70% 55%), hsl(330 82% 60%), hsl(24 93% 53%));
     --gradient-gold: linear-gradient(135deg, hsl(38 92% 55%), hsl(48 96% 65%));
     --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(0 0% 100%));
 
@@ -56,7 +56,7 @@
     --glow-pink: 0 10px 24px -8px hsl(24 93% 53% / 0.35);
     --shadow-soft: 0 10px 30px -10px hsl(222 30% 20% / 0.15);
     --shadow-card: 0 2px 16px -4px hsl(222 30% 20% / 0.08);
-    --shadow-card-hover: 0 16px 36px -12px hsl(222 30% 20% / 0.18);
+    --shadow-card-hover: 0 24px 48px -16px hsl(222 30% 20% / 0.28);
 
     --transition-spring: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -81,7 +81,7 @@
 @layer components {
   .btn-spark {
     @apply relative overflow-hidden inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 font-semibold text-primary-foreground transition-all;
-    background: hsl(var(--primary));
+    background: var(--gradient-festive);
     box-shadow: var(--glow-primary);
   }
   .btn-spark::before {
@@ -91,18 +91,18 @@
     transform: translateX(-100%);
     transition: transform 0.6s ease;
   }
-  .btn-spark:hover { transform: translateY(-2px); background: hsl(20 92% 48%); }
+  .btn-spark:hover { transform: translateY(-2px); filter: brightness(0.95); }
   .btn-spark:hover::before { transform: translateX(100%); }
 
   .btn-outline-festive {
     @apply inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 font-semibold border-2 transition-all;
-    border-color: hsl(var(--foreground));
-    color: hsl(var(--foreground));
+    border-color: hsl(330 82% 60%);
+    color: hsl(330 82% 60%);
     background: hsl(var(--card));
   }
   .btn-outline-festive:hover {
-    border-color: hsl(var(--primary));
-    color: hsl(var(--primary));
+    border-color: hsl(20 92% 55%);
+    color: hsl(20 92% 55%);
     transform: translateY(-2px);
   }
 
@@ -113,11 +113,17 @@
   }
 
   .text-gradient-festive {
-    color: hsl(var(--primary));
+    background: var(--gradient-festive);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   .text-gradient-pink {
-    color: hsl(var(--primary));
+    background: var(--gradient-pink);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   .text-gradient-gold {
@@ -166,7 +172,7 @@
   }
 
   .section-pad { @apply py-20 px-4 md:px-8; }
-  .container-festive { @apply max-w-7xl mx-auto; }
+  .container-festive { @apply max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8; }
 }
 
 @layer utilities {

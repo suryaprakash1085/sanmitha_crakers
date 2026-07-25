@@ -100,11 +100,11 @@ export default function AccessControl() {
 
         {/* MATRIX */}
         <TabsContent value="matrix">
-          <div className="rounded-2xl border border-white/5 bg-slate-900/40 overflow-x-auto">
+          <div className="rounded-2xl border border-gray-200 bg-white overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-slate-900/60">
+              <thead className="border-gray-200">
                 <tr>
-                  <th className="text-left p-4 font-semibold text-slate-200 sticky left-0 bg-slate-900/60">
+                  <th className="text-left p-4 font-semibold text-slate-200 sticky left-0 border-gray-200">
                     Page
                   </th>
                   {roles.map((r) => (
@@ -125,7 +125,7 @@ export default function AccessControl() {
               <tbody>
                 {ADMIN_PAGES.map((p) => (
                   <tr key={p.key} className="border-t border-white/5 hover:bg-slate-800/30">
-                    <td className="p-4 text-slate-300 sticky left-0 bg-slate-900/40">{p.label}</td>
+                    <td className="p-4 text-slate-300 sticky left-0 border-gray-200">{p.label}</td>
                     {roles.map((r) => (
                       <td key={r.id} className="p-4 text-center">
                         <Checkbox
@@ -144,7 +144,7 @@ export default function AccessControl() {
 
         {/* ROLES */}
         <TabsContent value="roles" className="space-y-4">
-          <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-5">
+          <div className="rounded-2xl border border-white/5 border-gray-200 p-5">
             <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto] items-end">
               <div>
                 <Label>Role Name</Label>
@@ -172,7 +172,7 @@ export default function AccessControl() {
             {roles.map((r) => (
               <div
                 key={r.id}
-                className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 flex items-start justify-between gap-4"
+                className="rounded-2xl border border-white/5 border-gray-200 p-5 flex items-start justify-between gap-4"
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
@@ -207,7 +207,7 @@ export default function AccessControl() {
 
         {/* ASSIGNMENTS */}
         <TabsContent value="assignments" className="space-y-4">
-          <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-5">
+          <div className="rounded-2xl border border-white/5 border-gray-200 p-5">
             <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto] items-end">
               <div>
                 <Label>User Email</Label>
@@ -241,9 +241,9 @@ export default function AccessControl() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/5 bg-slate-900/40 overflow-hidden">
+          <div className="rounded-2xl border border-white/5 border-gray-200 overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-slate-900/60">
+              <thead className="border-gray-200">
                 <tr>
                   <th className="text-left p-4 font-semibold text-slate-200">
                     <UsersIcon className="h-4 w-4 inline mr-2" /> User

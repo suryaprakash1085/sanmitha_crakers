@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { Menu, Search, Shield, ShoppingCart, Sparkles, X } from "lucide-react";
+import { Menu, Search, User, ShoppingCart, Sparkles, X } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 
 const links = [
@@ -8,7 +8,7 @@ const links = [
   { to: "/about", label: "About" },
   { to: "/services", label: "Services" },
   { to: "/products", label: "Products" },
-  { to: "/quick-order", label: "Quick Order" },
+  { to: "/collections", label: "Collections" },
   { to: "/offers", label: "Offers" },
   { to: "/contact", label: "Contact" },
 ];
@@ -36,7 +36,7 @@ export const Navbar = () => {
     >
       <div className="container-festive flex items-center justify-between px-4 md:px-6 py-3">
         <Link to="/" className="flex items-center gap-2.5 group shrink-0">
-          <div className="w-10 h-10 rounded-full bg-primary grid place-items-center">
+          <div className="w-10 h-10 rounded-full bg-festive grid place-items-center">
             <Sparkles className="w-5 h-5 text-white" />
           </div>
           <span className="font-display font-extrabold text-lg leading-tight text-foreground uppercase tracking-tight">
@@ -83,7 +83,7 @@ export const Navbar = () => {
             aria-label="Admin Login"
             className="hidden sm:grid place-items-center w-10 h-10 rounded-full hover:bg-muted transition-colors text-foreground/70 hover:text-primary"
           >
-            <Shield className="w-4 h-4" />
+            <User className="w-4 h-4" />
           </Link>
           <button onClick={() => setCartOpen(true)} className="relative grid place-items-center w-10 h-10 rounded-full hover:bg-muted transition-colors text-foreground/70 hover:text-primary">
             <ShoppingCart className="w-4 h-4" />

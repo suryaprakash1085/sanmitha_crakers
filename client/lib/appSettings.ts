@@ -204,7 +204,7 @@ const defaults = {
     },
     offer: {
       show: true,
-      badge: "UP TO 50% OFF",
+      badge: "Limited Time Only",
       title: "Biggest",
       titleHighlight: "Festival Offers",
       description: "Get amazing discounts on all your favourite crackers. Limited time only — grab them before they're gone!",
@@ -218,10 +218,10 @@ const defaults = {
       title: "Why",
       titleHighlight: "Choose Us",
       items: [
-        { icon: "Award", title: "Best Quality", desc: "We use the best raw materials.", colorHue: "6" },
+        { icon: "Award", title: "Best Quality", desc: "We use the best raw materials.", colorHue: "340" },
         { icon: "ShieldCheck", title: "Safe & Secure", desc: "Your safety is our top priority.", colorHue: "200" },
         { icon: "Sparkles", title: "Wide Variety", desc: "Largest collection of crackers.", colorHue: "42" },
-        { icon: "Truck", title: "Fast Delivery", desc: "Quick delivery at your door.", colorHue: "340" },
+        { icon: "Truck", title: "Fast Delivery", desc: "Quick delivery at your door.", colorHue: "265" },
       ],
     },
   } as HomeSettings,
