@@ -9,17 +9,19 @@ import { DataTable, Column } from "@/components/admin/DataTable";
 import { RowActions } from "@/components/admin/RowActions";
 import { FormModal } from "@/components/admin/FormModal";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { ImagePicker } from "@/components/admin/ImagePicker";
 import { useCrudModal } from "@/hooks/useCrudModal";
 import { TableFilters } from "@/components/admin/TableFilters";
 import { api } from "@/lib/api";
 
-interface Category { id: number; name: string; productCount: number; }
+interface Category { id: number; name: string; image: string | null; productCount: number; }
 
 export default function Categories() {
   const [items, setItems] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const modal = useCrudModal<Category>();
   const [name, setName] = useState("");
+  const [image, setImage] = useState("");
   const [search, setSearch] = useState("");
   const filtered = useMemo(() => items.filter(c => c.name.toLowerCase().includes(search.toLowerCase())), [items, search]);
 
@@ -27,7 +29,7 @@ export default function Categories() {
     setLoading(true);
     try {
       const res = await api.get<{ data: Category[] }>("/categories");
-      setItems(res.data.map((c: any) => ({ ...c, productCount: Number(c.productCount) || 0 })));
+      setItems(res.data.map((c: any) => ({ ...c, image: c.image ?? null, productCount: Number(c.productCount) || 0 })));
     } catch (err: any) {
       toast.error(err.message || "Failed to load categories");
     } finally {
@@ -37,17 +39,17 @@ export default function Categories() {
 
   useEffect(() => { load(); }, []);
 
-  const onCreate = () => { setName(""); modal.openCreate(); };
-  const onEdit = (c: Category) => { setName(c.name); modal.openEdit(c); };
+  const onCreate = () => { setName(""); setImage(""); modal.openCreate(); };
+  const onEdit = (c: Category) => { setName(c.name); setImage(c.image || ""); modal.openEdit(c); };
 
   const save = async () => {
     if (!name.trim()) return toast.error("Name required");
     try {
       if (modal.mode === "edit" && modal.item) {
-        await api.put(`/categories/${modal.item.id}`, { name });
+        await api.put(`/categories/${modal.item.id}`, { name, image });
         toast.success("Category updated");
       } else {
-        await api.post("/categories", { name });
+        await api.post("/categories", { name, image });
         toast.success("Category added");
       }
       modal.close();
@@ -71,6 +73,15 @@ export default function Categories() {
   };
 
   const columns: Column<Category>[] = [
+    {
+      header: "Image",
+      cell: (c) =>
+        c.image ? (
+          <img src={c.image} alt={c.name} className="h-10 w-10 rounded-md object-cover border border-slate-200" />
+        ) : (
+          <div className="h-10 w-10 rounded-md bg-slate-100 border border-slate-200" />
+        ),
+    },
     { header: "Name", cell: (c) => c.name },
     { header: "Products", cell: (c) => c.productCount },
     { header: "Actions", cell: (c) => <RowActions onView={() => modal.openView(c)} onEdit={() => onEdit(c)} onDelete={() => modal.openDelete(c)} /> },
@@ -95,11 +106,17 @@ export default function Categories() {
       >
         {modal.mode === "view" && modal.item ? (
           <div className="space-y-2">
+            {modal.item.image && (
+              <img src={modal.item.image} alt={modal.item.name} className="h-24 w-24 rounded-md object-cover border border-slate-200" />
+            )}
             <div><Label>Name</Label><p className="font-medium">{modal.item.name}</p></div>
             <div><Label>Products</Label><p>{modal.item.productCount}</p></div>
           </div>
         ) : (
-          <div><Label>Name</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
+          <div className="space-y-4">
+            <div><Label>Name</Label><Input value={name} onChange={(e) => setName(e.target.value)} /></div>
+            <ImagePicker label="Category Image" value={image} onChange={setImage} uploadUrl="/api/categories/upload" />
+          </div>
         )}
       </FormModal>
 

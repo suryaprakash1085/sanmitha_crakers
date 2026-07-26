@@ -32,6 +32,7 @@ import AdminPdfTemplate from "./pages/admin/PdfTemplate.tsx";
 import AdminEmailSettings from "./pages/admin/EmailSettings.tsx";
 import AdminAccessControl from "./pages/admin/AccessControl.tsx";
 import AdminReport from "./pages/admin/Report.tsx";
+
 import { useApplyAppCustomization } from "@/lib/appSettings";
 
 const queryClient = new QueryClient();

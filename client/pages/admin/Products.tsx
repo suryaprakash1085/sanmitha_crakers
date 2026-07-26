@@ -12,13 +12,16 @@ import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { useCrudModal } from "@/hooks/useCrudModal";
 import { TableFilters } from "@/components/admin/TableFilters";
 import { ImagePicker } from "@/components/admin/ImagePicker";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { api } from "@/lib/api";
 
 interface Product { id: number; name: string; price: number; discount_percent?: number; category: string; image: string; badge?: string; }
+interface CategoryOption { id: number; name: string; }
 
 export default function AdminProducts() {
   const [items, setItems] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
   const modal = useCrudModal<Product>();
   const [form, setForm] = useState({ name: "", price: 0, discount_percent: 0, category: "", image: "" });
   const [search, setSearch] = useState("");
@@ -36,7 +39,16 @@ export default function AdminProducts() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  const loadCategories = async () => {
+    try {
+      const res = await api.get<{ data: CategoryOption[] }>("/categories");
+      setCategoryOptions(res.data.map((c: any) => ({ id: c.id, name: c.name })));
+    } catch (err: any) {
+      toast.error(err.message || "Failed to load categories");
+    }
+  };
+
+  useEffect(() => { load(); loadCategories(); }, []);
 
   const filtered = useMemo(() => items.filter((p) => {
     const q = search.toLowerCase();
@@ -139,7 +151,19 @@ export default function AdminProducts() {
             <div><Label>Name</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
             <div><Label>Price</Label><Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: +e.target.value })} /></div>
             <div><Label>Discount %</Label><Input type="number" min={0} max={100} value={form.discount_percent} onChange={(e) => setForm({ ...form, discount_percent: +e.target.value })} /></div>
-            <div><Label>Category</Label><Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} /></div>
+            <div>
+              <Label>Category</Label>
+              <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categoryOptions.map((c) => (
+                    <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <ImagePicker
               label="Product Image"
               value={form.image}

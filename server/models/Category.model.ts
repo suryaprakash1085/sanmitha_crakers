@@ -3,6 +3,7 @@ import db from "../db";
 export interface CategoryRow {
   id: number;
   name: string;
+  image: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -15,7 +16,7 @@ export const CategoryModel = {
     return db("categories as c")
       .leftJoin("products as p", "p.category_id", "c.id")
       .groupBy("c.id")
-      .select("c.id", "c.name")
+      .select("c.id", "c.name", "c.image")
       .count("p.id as productCount")
       .orderBy("c.id", "asc");
   },
@@ -28,13 +29,15 @@ export const CategoryModel = {
     return table().where({ name }).first();
   },
 
-  async create(name: string) {
-    const [id] = await table().insert({ name });
+  async create(name: string, image?: string | null) {
+    const [id] = await table().insert({ name, image: image || null });
     return this.findById(id);
   },
 
-  async update(id: number, name: string) {
-    await table().where({ id }).update({ name, updated_at: db.fn.now() });
+  async update(id: number, name: string, image?: string | null) {
+    const update: Record<string, any> = { name, updated_at: db.fn.now() };
+    if (image !== undefined) update.image = image || null;
+    await table().where({ id }).update(update);
     return this.findById(id);
   },
 
