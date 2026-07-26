@@ -4,10 +4,10 @@ import { Menu, Search, User, ShoppingCart, Sparkles, X } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 
 const links = [
-  { to: "/", label: "Home" },
+  { to: "/home", label: "Home" },
   { to: "/about", label: "About" },
   { to: "/services", label: "Services" },
-  { to: "/products", label: "Products" },
+  { to: "/", label: "Products" },
   { to: "/collections", label: "Collections" },
   { to: "/offers", label: "Offers" },
   { to: "/contact", label: "Contact" },
@@ -38,13 +38,13 @@ export const Navbar = () => {
         <Link to="/" className="flex items-center gap-2.5 group shrink-0">
           <div className="w-10 h-10 rounded-full bg-festive grid place-items-center">
              <img
-    src="/favicon.ico.png"
-    alt="Star Fireworks Logo"
+    src="/favicon.ico"
+    alt="Sanmitha Fireworks Logo"
     className="w-full h-full object-cover"
   />
           </div>
           <span className="font-display font-extrabold text-lg leading-tight text-foreground uppercase tracking-tight">
-            Star
+           Sanmitha
             <span className="block text-[10px] font-semibold tracking-[0.25em] text-primary -mt-0.5">
               Fireworks
             </span>

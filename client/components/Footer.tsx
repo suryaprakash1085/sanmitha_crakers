@@ -49,8 +49,8 @@ export const Footer = () => (
           <Link to="/" className="flex items-center gap-2 mb-3">
             <div className="w-9 h-9 rounded-full bg-festive grid place-items-center">
                 <img
-    src="/favicon.ico.png"
-    alt="Star Fireworks Logo"
+    src="/favicon.ico"
+    alt="Sanmitha Fireworks Logo"
     className="w-full h-full object-cover"
   />
             </div>
