@@ -27,3 +27,6 @@ dist-ssr
 !.env
 
 .env
+
+# Uploaded debug/asset files
+attached_assets/
