@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Layout } from "@/components/Layout";
-import { products, type Category, type Product } from "@/data/products";
+import { type Category, type Product } from "@/data/products";
+import { useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/context/CartContext";
 import { Search, SlidersHorizontal, Minus, Plus, ShoppingCart, Zap } from "lucide-react";
 import { toast } from "sonner";
@@ -16,6 +17,7 @@ const QuickOrder = () => {
   const [sort, setSort] = useState<(typeof sorts)[number]>("Name");
   const [qty, setQty] = useState<Record<string, number>>({});
   const { add, setOpen } = useCart();
+  const { products, loading } = useProducts();
 
   const filtered = useMemo(() => {
     let r = products.filter(p =>
@@ -27,7 +29,7 @@ const QuickOrder = () => {
     if (sort === "Price: High to Low") r = [...r].sort((a, b) => b.price - a.price);
     if (sort === "Name") r = [...r].sort((a, b) => a.name.localeCompare(b.name));
     return r;
-  }, [cat, search, maxPrice, sort]);
+  }, [cat, search, maxPrice, sort, products]);
 
   const setQ = (id: string, v: number) => setQty(prev => ({ ...prev, [id]: Math.max(0, v) }));
 
@@ -122,7 +124,11 @@ const QuickOrder = () => {
                 </div>
               </div>
 
-              {filtered.length === 0 ? (
+              {loading ? (
+                <div className="glass-card rounded-3xl p-12 text-center text-muted-foreground">
+                  Loading products…
+                </div>
+              ) : filtered.length === 0 ? (
                 <div className="glass-card rounded-3xl p-12 text-center text-muted-foreground">
                   No products match your filters.
                 </div>

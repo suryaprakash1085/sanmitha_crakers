@@ -37,7 +37,11 @@ export const Navbar = () => {
       <div className="container-festive flex items-center justify-between px-4 md:px-6 py-3">
         <Link to="/" className="flex items-center gap-2.5 group shrink-0">
           <div className="w-10 h-10 rounded-full bg-festive grid place-items-center">
-            <Sparkles className="w-5 h-5 text-white" />
+             <img
+    src="/favicon.ico.png"
+    alt="Star Fireworks Logo"
+    className="w-full h-full object-cover"
+  />
           </div>
           <span className="font-display font-extrabold text-lg leading-tight text-foreground uppercase tracking-tight">
             Star

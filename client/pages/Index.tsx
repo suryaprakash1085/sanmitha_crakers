@@ -5,7 +5,7 @@ import { FloatingSparks } from "@/components/FloatingSparks";
 import { SparkButton } from "@/components/SparkButton";
 import { Tilt3D } from "@/components/Tilt3D";
 import { ProductCard } from "@/components/ProductCard";
-import { products } from "@/data/products";
+import { useProducts } from "@/hooks/useProducts";
 import heroImg from "@/assets/hero-crackers.png";
 import giftbox from "@/assets/giftbox.png";
 import { Link } from "react-router-dom";
@@ -22,6 +22,7 @@ const CATEGORIES = [
 
 const Index = () => {
   const h = useHomeSettings();
+  const { products } = useProducts();
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const scrollByCards = (dir: 1 | -1) => {
     scrollRef.current?.scrollBy({ left: dir * 320, behavior: "smooth" });

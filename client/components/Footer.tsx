@@ -48,10 +48,14 @@ export const Footer = () => (
         <div className="lg:col-span-1">
           <Link to="/" className="flex items-center gap-2 mb-3">
             <div className="w-9 h-9 rounded-full bg-festive grid place-items-center">
-              <Sparkles className="w-5 h-5 text-white" />
+                <img
+    src="/favicon.ico.png"
+    alt="Star Fireworks Logo"
+    className="w-full h-full object-cover"
+  />
             </div>
             <span className="font-display font-extrabold text-xl text-white uppercase">
-              Star Fireworks
+              Sanmitha Fireworks
             </span>
           </Link>
           <p className="text-sm text-white/60">

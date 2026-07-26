@@ -3,7 +3,8 @@ import { motion } from "framer-motion";
 import { Layout } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductModal } from "@/components/ProductModal";
-import { products, type Category, type Product } from "@/data/products";
+import { type Category, type Product } from "@/data/products";
+import { useProducts } from "@/hooks/useProducts";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { Fireworks } from "@/components/Fireworks";
 import { useSearchParams } from "react-router-dom";
@@ -21,6 +22,7 @@ const Products = () => {
   const [maxPrice, setMaxPrice] = useState(2000);
   const [sort, setSort] = useState<(typeof sorts)[number]>("Popularity");
   const [active, setActive] = useState<Product | null>(null);
+  const { products, loading } = useProducts();
 
   // Keep the filter in sync if the URL's ?category= changes (e.g. clicking a
   // different category link while already on this page).
@@ -54,7 +56,7 @@ const Products = () => {
     if (sort === "Price: High to Low") r = [...r].sort((a, b) => b.price - a.price);
     if (sort === "Name") r = [...r].sort((a, b) => a.name.localeCompare(b.name));
     return r;
-  }, [cat, search, maxPrice, sort]);
+  }, [cat, search, maxPrice, sort, products]);
 
   return (
     <Layout>
@@ -117,7 +119,11 @@ const Products = () => {
                 </div>
               </div>
 
-              {filtered.length === 0 ? (
+              {loading ? (
+                <div className="glass-card rounded-3xl p-12 text-center text-muted-foreground">
+                  Loading products…
+                </div>
+              ) : filtered.length === 0 ? (
                 <div className="glass-card rounded-3xl p-12 text-center text-muted-foreground">
                   No products match your filters.
                 </div>
