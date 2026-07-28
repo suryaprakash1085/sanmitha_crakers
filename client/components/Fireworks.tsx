@@ -18,7 +18,8 @@ import { useEffect, useRef } from "react";
  * normally when open.
  */
 
-const HUES = [6, 42, 340, 200, 25, 48];
+// const HUES = [6, 42, 340, 200, 25, 48];
+const HUES = [0, 20, 45, 60, 90, 140, 175, 200, 230, 270, 300, 330];
 
 type Particle = {
   x: number;
@@ -90,25 +91,47 @@ export const Fireworks = () => {
       });
     };
 
+    // const explode = (x: number, y: number, hue: number) => {
+    //   const count = 46 + Math.floor(Math.random() * 30);
+    //   for (let i = 0; i < count; i++) {
+    //     const angle = (Math.PI * 2 * i) / count + Math.random() * 0.2;
+    //     const speed = 1.6 + Math.random() * 3.4;
+    //     const z = 0.3 + Math.random() * 1.0;
+    //     particles.push({
+    //       x,
+    //       y,
+    //       vx: Math.cos(angle) * speed * z,
+    //       vy: Math.sin(angle) * speed * z,
+    //       z,
+    //       hue: hue + (Math.random() * 18 - 9),
+    //       life: 0,
+    //       maxLife: 55 + Math.random() * 35,
+    //       size: (1.2 + Math.random() * 1.8) * z,
+    //     });
+    //   }
+    // };
+
+
     const explode = (x: number, y: number, hue: number) => {
-      const count = 46 + Math.floor(Math.random() * 30);
-      for (let i = 0; i < count; i++) {
-        const angle = (Math.PI * 2 * i) / count + Math.random() * 0.2;
-        const speed = 1.6 + Math.random() * 3.4;
-        const z = 0.3 + Math.random() * 1.0;
-        particles.push({
-          x,
-          y,
-          vx: Math.cos(angle) * speed * z,
-          vy: Math.sin(angle) * speed * z,
-          z,
-          hue: hue + (Math.random() * 18 - 9),
-          life: 0,
-          maxLife: 55 + Math.random() * 35,
-          size: (1.2 + Math.random() * 1.8) * z,
-        });
-      }
-    };
+  const count = 46 + Math.floor(Math.random() * 30);
+  for (let i = 0; i < count; i++) {
+    const angle = (Math.PI * 2 * i) / count + Math.random() * 0.2;
+    const speed = 1.6 + Math.random() * 3.4;
+    const z = 0.3 + Math.random() * 1.0;
+    particles.push({
+      x,
+      y,
+      vx: Math.cos(angle) * speed * z,
+      vy: Math.sin(angle) * speed * z,
+      z,
+      hue: HUES[Math.floor(Math.random() * HUES.length)], // multicolor per particle
+      life: 0,
+      maxLife: 55 + Math.random() * 35,
+      size: (1.2 + Math.random() * 1.8) * z,
+    });
+  }
+};
+
 
     const step = (t: number) => {
       if (!running) return;
