@@ -19,6 +19,7 @@ import { settingsStore } from "@/lib/appSettings";
 import { buildInvoicePdf } from "@/lib/invoicePdf";
 
 type Status = "Pending" | "Processing" | "Shipped" | "Delivered";
+type PaymentMethod = "Pending" | "Cash on Delivery" | "Online Payment" | "UPI" | "Card";
 
 interface OrderItem {
   id?: number;
@@ -34,6 +35,7 @@ interface Order {
   customer_name: string;
   total: number;
   status: Status;
+  payment_method: PaymentMethod;
   order_date: string;
   phone: string;
   address: string;
@@ -53,17 +55,28 @@ const statusVariants: Record<Status, string> = {
   Delivered: "bg-green-100 text-green-800",
 };
 
+const paymentMethodVariants: Record<PaymentMethod, string> = {
+  Pending: "bg-yellow-100 text-yellow-800",
+  "Cash on Delivery": "bg-orange-100 text-orange-800",
+  "Online Payment": "bg-green-100 text-green-800",
+  UPI: "bg-teal-100 text-teal-800",
+  Card: "bg-indigo-100 text-indigo-800",
+};
+
+const paymentMethodOptions: PaymentMethod[] = ["Pending", "Cash on Delivery", "Online Payment", "UPI", "Card"];
+
 export default function Orders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<ProductOption[]>([]);
   const [loading, setLoading] = useState(true);
   const modal = useCrudModal<Order>();
   const [editStatus, setEditStatus] = useState<Status>("Pending");
+  const [editPaymentMethod, setEditPaymentMethod] = useState<PaymentMethod>("Pending");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("__all__");
   const [createOpen, setCreateOpen] = useState(false);
   const [creating, setCreating] = useState(false);
-  const emptyOrderForm = { customer_name: "", phone: "", address: "", total: 0 };
+  const emptyOrderForm = { customer_name: "", phone: "", address: "", total: 0, payment_method: "Pending" as PaymentMethod };
   const [orderForm, setOrderForm] = useState(emptyOrderForm);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [pickProductId, setPickProductId] = useState("");
@@ -132,12 +145,13 @@ export default function Orders() {
     });
   };
 
-  const onEdit = (o: Order) => { setEditStatus(o.status); modal.openEdit(o); };
+  const onEdit = (o: Order) => { setEditStatus(o.status); setEditPaymentMethod(o.payment_method || "Pending"); modal.openEdit(o); };
   const save = async () => {
     if (modal.item) {
       try {
         await api.put(`/orders/${modal.item.id}/status`, { status: editStatus });
-        toast.success("Status updated");
+        await api.put(`/orders/${modal.item.id}/payment-method`, { payment_method: editPaymentMethod });
+        toast.success("Order updated");
         modal.close();
         load();
       } catch (err: any) {
@@ -212,6 +226,14 @@ export default function Orders() {
     { header: "Date", cell: (o) => o.order_date },
     { header: "Total", cell: (o) => `₹${o.total}` },
     { header: "Status", cell: (o) => <Badge className={statusVariants[o.status]}>{o.status}</Badge> },
+    {
+      header: "Payment Method",
+      cell: (o) => (
+        <Badge className={paymentMethodVariants[o.payment_method || "Pending"]}>
+          {o.payment_method || "Pending"}
+        </Badge>
+      ),
+    },
     {
       header: "Actions",
       cell: (o) => (
@@ -292,6 +314,23 @@ export default function Orders() {
                 </Select>
               )}
             </div>
+            <div>
+              <Label>Payment Method</Label>
+              {modal.mode === "view" ? (
+                <Badge className={paymentMethodVariants[modal.item.payment_method || "Pending"]}>
+                  {modal.item.payment_method || "Pending"}
+                </Badge>
+              ) : (
+                <Select value={editPaymentMethod} onValueChange={(v) => setEditPaymentMethod(v as PaymentMethod)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {paymentMethodOptions.map((pm) => (
+                      <SelectItem key={pm} value={pm}>{pm}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
           </div>
         )}
       </FormModal>
@@ -307,6 +346,17 @@ export default function Orders() {
           <div><Label>Customer Name</Label><Input value={orderForm.customer_name} onChange={(e) => setOrderForm({ ...orderForm, customer_name: e.target.value })} /></div>
           <div><Label>Phone</Label><Input value={orderForm.phone} onChange={(e) => setOrderForm({ ...orderForm, phone: e.target.value })} /></div>
           <div><Label>Address</Label><Textarea value={orderForm.address} onChange={(e) => setOrderForm({ ...orderForm, address: e.target.value })} /></div>
+          <div>
+            <Label>Payment Method</Label>
+            <Select value={orderForm.payment_method} onValueChange={(v) => setOrderForm({ ...orderForm, payment_method: v as PaymentMethod })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {paymentMethodOptions.map((pm) => (
+                  <SelectItem key={pm} value={pm}>{pm}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           <div className="space-y-2">
             <Label>Products</Label>

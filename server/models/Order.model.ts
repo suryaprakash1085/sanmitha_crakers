@@ -51,6 +51,7 @@ export const OrderModel = {
     category?: string;
     total: number;
     status?: string;
+    payment_method?: string;
     order_date?: string;
     items?: OrderItemInput[];
   }) {
@@ -65,6 +66,7 @@ export const OrderModel = {
       category: data.category || null,
       total,
       status: data.status || "Pending",
+      payment_method: data.payment_method || "Pending",
       order_date: data.order_date || new Date().toISOString().slice(0, 10),
     });
     if (data.items?.length) {
@@ -78,6 +80,11 @@ export const OrderModel = {
     return this.findById(id);
   },
 
+  async updatePaymentMethod(id: number, payment_method: string) {
+    await table().where({ id }).update({ payment_method, updated_at: db.fn.now() });
+    return this.findById(id);
+  },
+
   async update(
     id: number,
     data: Partial<{
@@ -87,6 +94,7 @@ export const OrderModel = {
       category: string;
       total: number;
       status: string;
+      payment_method: string;
       items: OrderItemInput[];
     }>,
   ) {

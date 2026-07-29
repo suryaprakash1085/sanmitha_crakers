@@ -21,7 +21,7 @@ export const OrderController = {
   },
 
   async create(req: Request, res: Response) {
-    const { customer_name, phone, address, category, total, status, order_date, items } = req.body;
+    const { customer_name, phone, address, category, total, status, payment_method, order_date, items } = req.body;
     if (!customer_name?.trim() || !phone?.trim()) {
       return res.status(400).json({ success: false, error: "Customer name and phone are required" });
     }
@@ -32,6 +32,7 @@ export const OrderController = {
       category,
       total: Number(total) || 0,
       status,
+      payment_method: payment_method || "Pending",
       order_date,
       items: Array.isArray(items)
         ? items.map((it: any) => ({
@@ -49,6 +50,13 @@ export const OrderController = {
     const { status } = req.body;
     if (!status) return res.status(400).json({ success: false, error: "Status is required" });
     const item = await OrderModel.updateStatus(Number(req.params.id), status);
+    res.json({ success: true, data: item });
+  },
+
+  async updatePaymentMethod(req: Request, res: Response) {
+    const { payment_method } = req.body;
+    if (!payment_method) return res.status(400).json({ success: false, error: "Payment method is required" });
+    const item = await OrderModel.updatePaymentMethod(Number(req.params.id), payment_method);
     res.json({ success: true, data: item });
   },
 
