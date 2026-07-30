@@ -60,18 +60,18 @@ const Products = () => {
 
   return (
     <Layout>
-      <section className="section-pad !pt-10">
+       <section className="section-pad !pt-10">
         <div className="container-festive">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
+             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
             <span className="text-primary font-semibold text-sm">Shop</span>
             <h1 className="font-display text-4xl md:text-6xl font-bold mt-2">
               Our <span className="text-gradient-festive">Products</span>
             </h1>
           </motion.div>
 
-          <div className="grid lg:grid-cols-[280px_1fr] gap-6">
+           <div className="grid lg:grid-cols-[280px_1fr] gap-6">
             {/* Sidebar filters */}
-            <aside className="glass-card rounded-3xl p-6 h-fit lg:sticky lg:top-28">
+             <aside className="glass-card rounded-3xl p-6 h-fit lg:sticky lg:top-28">
               <div className="flex items-center gap-2 mb-4">
                 <SlidersHorizontal className="w-4 h-4 text-primary" />
                 <h3 className="font-display font-semibold">Filter Products</h3>

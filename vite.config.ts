@@ -8,11 +8,11 @@ export default defineConfig(({ mode }) => ({
     host: "0.0.0.0",
     port: 5000,
     allowedHosts: true,
-  fs: {
-  allow: ["./", "./client", "./shared"], // <-- added "./" for root
-  deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**", "server/**"],
-},
-
+    hmr: { overlay: false },
+    fs: {
+      allow: ["./", "./client", "./shared"],
+      deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**", "server/**"],
+    },
   },
   build: {
     outDir: "dist/spa",

@@ -43,12 +43,12 @@ const Index = () => {
                   <Icon name="Flame" className="w-3.5 h-3.5" /> {h.hero.badge}
                 </span>
               )}
-              <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold leading-[1.1] mb-5 break-words">
+               <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold leading-[1.1] mb-5 break-words text-white">
                 {h.hero.title}
                 <br />
                 <span className="text-gradient-festive">{h.hero.titleHighlight}</span>
               </h1>
-              <p className="text-lg text-muted-foreground max-w-md mb-8">{h.hero.subtitle}</p>
+               <p className="text-lg text-muted-foreground max-w-md mb-8">{h.hero.subtitle}</p>
               <div className="flex flex-wrap gap-3">
                 {h.hero.ctaPrimary && (
                   <Link to={h.hero.ctaPrimaryLink || "/products"}>

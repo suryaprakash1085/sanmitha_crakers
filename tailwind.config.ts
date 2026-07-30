@@ -86,7 +86,9 @@ export default {
         "accordion-up": "accordion-up 0.2s ease-out",
       },
       fontFamily: {
-        sans: ["Inter", "sans-serif"],
+        sans: ["Space Grotesk", "sans-serif"],
+        display: ["Outfit", "sans-serif"],
+        mono: ["DM Mono", "monospace"],
       },
     },
   },

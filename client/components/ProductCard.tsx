@@ -18,7 +18,7 @@ export const ProductCard = ({ product, index = 0, onImageClick }: Props) => {
     setBursting(true);
     setTimeout(() => setBursting(false), 900);
     add(product);
-    toast.success(`${product.name} added 🎆`);
+     toast.success(`${product.name} added to your cart`);
   };
 
   return (
@@ -30,7 +30,7 @@ export const ProductCard = ({ product, index = 0, onImageClick }: Props) => {
         transition={{ duration: 0.5, delay: index * 0.06 }}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
-        className="product-card group h-full"
+         className="product-card group h-full border-white/10 bg-[linear-gradient(145deg,rgba(38,25,70,.96),rgba(15,10,34,.98))]"
       >
         {hover && (
           <div className="pointer-events-none absolute inset-0">
@@ -57,7 +57,7 @@ export const ProductCard = ({ product, index = 0, onImageClick }: Props) => {
         <button
           type="button"
           onClick={() => onImageClick?.(product)}
-          className="relative h-44 mb-4 grid place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-primary/15 via-accent/60 to-primary/5 w-full cursor-zoom-in"
+           className="relative h-44 mb-4 grid place-items-center overflow-hidden rounded-xl bg-[radial-gradient(circle,rgba(238,61,181,.17),transparent_60%),rgba(18,12,43,.8)] w-full cursor-zoom-in"
         >
           <img
             src={product.image}

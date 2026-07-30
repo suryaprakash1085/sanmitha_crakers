@@ -9,6 +9,7 @@ const links = [
   { to: "/services", label: "Services" },
   { to: "/", label: "Products" },
   { to: "/collections", label: "Collections" },
+  { to: "/quick-order", label: "Quick Order" },
   { to: "/offers", label: "Offers" },
   { to: "/contact", label: "Contact" },
 ];
@@ -30,20 +31,20 @@ export const Navbar = () => {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 bg-white transition-shadow duration-300 border-b border-border/70 ${
-        scrolled ? "shadow-[0_2px_20px_-4px_rgba(0,0,0,0.08)]" : ""
+      className={`fixed top-0 left-0 right-0 z-50 bg-[#0d0920]/85 backdrop-blur-xl transition-all duration-300 border-b border-white/10 ${
+        scrolled ? "shadow-[0_0_30px_rgba(190,52,220,.15)]" : ""
       }`}
     >
       <div className="container-festive flex items-center justify-between px-4 md:px-6 py-3">
         <Link to="/" className="flex items-center gap-2.5 group shrink-0">
-          <div className="w-10 h-10 rounded-full bg-festive grid place-items-center">
+           <div className="w-10 h-10 rounded-full bg-festive grid place-items-center shadow-[0_0_22px_rgba(238,62,183,.5)]">
              <img
     src="/favicon.ico"
     alt="Sanmitha Fireworks Logo"
     className="w-full h-full object-cover"
   />
           </div>
-          <span className="font-display font-extrabold text-lg leading-tight text-foreground uppercase tracking-tight">
+           <span className="font-display font-extrabold text-lg leading-tight text-foreground uppercase tracking-tight">
            Sanmitha
             <span className="block text-[10px] font-semibold tracking-[0.25em] text-primary -mt-0.5">
               Fireworks
@@ -57,8 +58,8 @@ export const Navbar = () => {
               key={l.to}
               to={l.to}
               end={l.to === "/"}
-              className={({ isActive }) =>
-                `relative pb-1 text-sm font-semibold uppercase tracking-wide transition-colors ${
+               className={({ isActive }) =>
+                 `relative pb-1 text-sm font-semibold uppercase tracking-wide transition-colors ${
                   isActive ? "text-primary" : "text-foreground/80 hover:text-primary"
                 }`
               }
@@ -108,8 +109,8 @@ export const Navbar = () => {
       </div>
 
       {/* mobile menu */}
-      {open && (
-        <div className="lg:hidden border-t border-border bg-white animate-fade-in-up">
+       {open && (
+         <div className="lg:hidden border-t border-white/10 bg-[#100b26] animate-fade-in-up">
           <nav className="flex flex-col p-3">
             {links.map((l) => (
               <NavLink

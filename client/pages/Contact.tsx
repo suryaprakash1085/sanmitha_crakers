@@ -11,7 +11,7 @@ const Contact = () => {
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Message sent! We'll get back to you shortly. ✨");
+     toast.success("Message sent. We'll get back to you shortly.");
     setForm({ name: "", email: "", phone: "", message: "" });
   };
 
@@ -37,7 +37,7 @@ const Contact = () => {
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium mb-1.5 block">Your Name</label>
-                  <input required value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="input-glow" placeholder="John Doe" />
+                   <input required value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="input-glow" placeholder="Your full name" />
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-1.5 block">Your Email</label>

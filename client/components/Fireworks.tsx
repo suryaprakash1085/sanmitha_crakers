@@ -31,6 +31,7 @@ type Particle = {
   life: number;
   maxLife: number;
   size: number;
+  shape: "ring" | "star" | "willow";
 };
 
 type Rocket = {
@@ -113,10 +114,10 @@ export const Fireworks = () => {
 
 
     const explode = (x: number, y: number, hue: number) => {
-  const count = 46 + Math.floor(Math.random() * 30);
+      const count = 110 + Math.floor(Math.random() * 90);
   for (let i = 0; i < count; i++) {
     const angle = (Math.PI * 2 * i) / count + Math.random() * 0.2;
-    const speed = 1.6 + Math.random() * 3.4;
+     const speed = 1.6 + Math.random() * 4.4;
     const z = 0.3 + Math.random() * 1.0;
     particles.push({
       x,
@@ -128,6 +129,7 @@ export const Fireworks = () => {
       life: 0,
       maxLife: 55 + Math.random() * 35,
       size: (1.2 + Math.random() * 1.8) * z,
+       shape: Math.random() > .72 ? "star" : Math.random() > .78 ? "willow" : "ring",
     });
   }
 };
@@ -137,7 +139,7 @@ export const Fireworks = () => {
       if (!running) return;
       ctx.clearRect(0, 0, width, height);
 
-      if (t - lastLaunch > 1600 + Math.random() * 1400 && rockets.length < 3) {
+       if (t - lastLaunch > 720 + Math.random() * 900 && rockets.length < 5) {
         launchRocket();
         lastLaunch = t;
       }
@@ -173,7 +175,7 @@ export const Fireworks = () => {
 
       particles = particles.filter((p) => {
         p.life++;
-        p.vy += 0.045;
+         p.vy += p.shape === "willow" ? 0.075 : 0.045;
         p.vx *= 0.985;
         p.vy *= 0.985;
         p.x += p.vx;
@@ -183,12 +185,22 @@ export const Fireworks = () => {
         const alpha = Math.max(0, (1 - lifeRatio) * p.z);
         if (alpha <= 0.01) return false;
 
-        ctx.beginPath();
+         ctx.beginPath();
         ctx.fillStyle = `hsla(${p.hue}, 92%, ${58 + p.z * 10}%, ${alpha})`;
         ctx.shadowColor = `hsla(${p.hue}, 100%, 60%, ${alpha})`;
         ctx.shadowBlur = 6 * p.z;
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
+         if (p.shape === "star") {
+           ctx.moveTo(p.x, p.y - p.size * 2.2);
+           for (let i = 1; i < 10; i++) {
+             const a = -Math.PI / 2 + i * Math.PI / 5;
+             const r = i % 2 ? p.size * .8 : p.size * 2.2;
+             ctx.lineTo(p.x + Math.cos(a) * r, p.y + Math.sin(a) * r);
+           }
+           ctx.fill();
+         } else {
+           ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+           ctx.fill();
+         }
         ctx.shadowBlur = 0;
 
         return true;

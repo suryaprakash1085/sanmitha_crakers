@@ -40,7 +40,7 @@ export const Tilt3D = ({ children, className = "", max = 10, lift = 14 }: Props)
       ref={ref}
       onMouseMove={handleMove}
       onMouseLeave={handleLeave}
-      className={`transition-transform duration-300 ease-out will-change-transform [transform-style:preserve-3d] ${className}`}
+      className={`transition-transform duration-300 ease-out will-change-transform [transform-style:preserve-3d] hover:drop-shadow-[0_20px_35px_rgba(207,51,212,.22)] ${className}`}
     >
       {children}
     </div>

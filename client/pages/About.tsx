@@ -24,7 +24,7 @@ const About = () => {
           )}
 
           {a.pillars.show && (
-            <div className="grid md:grid-cols-3 gap-5 mb-16">
+             <div className="grid md:grid-cols-3 gap-5 mb-16">
               {a.pillars.items.map((c, i) => (
                 <motion.div
                   key={i}

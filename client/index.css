@@ -1,62 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Outfit:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Star Fireworks — Clean White & Orange design system. All colors HSL. */
+/* Sanmitha Fireworks — Deep Space / Pyrotechnic Night */
 
 @layer base {
   :root {
-    /* Clean white canvas */
-    --background: 0 0% 100%;
-    --foreground: 222 30% 12%;
+    --background: 248 48% 7%;
+    --foreground: 42 36% 94%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222 30% 12%;
+    --card: 249 38% 12%;
+    --card-foreground: 42 36% 94%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 30% 12%;
+    --popover: 249 38% 12%;
+    --popover-foreground: 42 36% 94%;
 
     /* Star orange */
-    --primary: 24 93% 53%;
-    --primary-foreground: 0 0% 100%;
-    --primary-glow: 30 96% 58%;
+    --primary: 316 91% 63%;
+    --primary-foreground: 248 48% 7%;
+    --primary-glow: 316 91% 63%;
 
     /* Deep charcoal / black */
-    --secondary: 222 25% 14%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 263 64% 54%;
+    --secondary-foreground: 42 36% 94%;
 
-    --muted: 220 20% 96%;
-    --muted-foreground: 220 10% 45%;
+    --muted: 250 30% 18%;
+    --muted-foreground: 247 16% 67%;
 
     /* Soft orange tint accent */
-    --accent: 24 100% 95%;
-    --accent-foreground: 24 93% 40%;
+    --accent: 43 96% 59%;
+    --accent-foreground: 248 48% 7%;
 
-    --sky: 220 20% 97%;
+    --sky: 229 46% 13%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 4 90% 63%;
+    --destructive-foreground: 42 36% 94%;
 
-    --border: 220 18% 90%;
-    --input: 220 20% 95%;
-    --ring: 24 93% 53%;
+    --border: 255 28% 25%;
+    --input: 250 30% 19%;
+    --ring: 316 91% 63%;
 
     --radius: 0.9rem;
 
     /* Gradients */
-    --gradient-sky: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(220 25% 98%) 100%);
-    --gradient-festive: linear-gradient(135deg, hsl(330 82% 60%) 0%, hsl(20 92% 55%) 100%);
-    --gradient-pink: linear-gradient(135deg, hsl(280 70% 55%), hsl(330 82% 60%), hsl(24 93% 53%));
-    --gradient-gold: linear-gradient(135deg, hsl(38 92% 55%), hsl(48 96% 65%));
-    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(0 0% 100%));
+    --gradient-sky: linear-gradient(180deg, hsl(248 48% 7%) 0%, hsl(229 46% 13%) 100%);
+    --gradient-festive: linear-gradient(120deg, hsl(316 91% 63%), hsl(263 82% 61%) 52%, hsl(23 96% 59%));
+    --gradient-pink: linear-gradient(135deg, hsl(263 70% 35%), hsl(316 91% 43%), hsl(23 86% 45%));
+    --gradient-gold: linear-gradient(135deg, hsl(37 95% 51%), hsl(52 97% 70%));
+    --gradient-card: linear-gradient(145deg, hsl(250 38% 15% / .96), hsl(248 42% 9% / .98));
 
     /* Soft shadows (no neon glow) */
-    --glow-primary: 0 12px 28px -8px hsl(24 93% 53% / 0.35);
-    --glow-gold: 0 10px 24px -8px hsl(38 92% 50% / 0.35);
-    --glow-pink: 0 10px 24px -8px hsl(24 93% 53% / 0.35);
-    --shadow-soft: 0 10px 30px -10px hsl(222 30% 20% / 0.15);
-    --shadow-card: 0 2px 16px -4px hsl(222 30% 20% / 0.08);
-    --shadow-card-hover: 0 24px 48px -16px hsl(222 30% 20% / 0.28);
+    --glow-primary: 0 0 28px hsl(316 91% 63% / .28), 0 14px 35px -12px hsl(263 82% 61% / .5);
+    --glow-gold: 0 0 24px hsl(43 96% 59% / .35);
+    --glow-pink: 0 0 28px hsl(316 91% 63% / .35);
+    --shadow-soft: 0 18px 48px -20px hsl(263 82% 10% / .8);
+    --shadow-card: 0 18px 44px -22px hsl(263 82% 4% / .9);
+    --shadow-card-hover: 0 24px 60px -18px hsl(316 91% 40% / .45);
 
     --transition-spring: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -69,7 +69,8 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Figtree', system-ui, sans-serif;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    background: hsl(var(--background));
     overflow-x: hidden;
   }
   h1, h2, h3, h4 {
@@ -107,8 +108,8 @@
   }
 
   .glass-card {
-    background: hsl(0 0% 100%);
-    border: 1px solid hsl(220 18% 90%);
+    background: var(--gradient-card);
+    border: 1px solid hsl(var(--border) / .8);
     box-shadow: var(--shadow-card);
   }
 
@@ -161,8 +162,8 @@
 
   .input-glow {
     @apply w-full rounded-lg border px-4 py-3 outline-none transition-all;
-    background: hsl(0 0% 100%);
-    border-color: hsl(var(--border));
+     background: hsl(var(--input) / .75);
+     border-color: hsl(var(--border));
     color: hsl(var(--foreground));
   }
   .input-glow::placeholder { color: hsl(var(--muted-foreground)); }
@@ -225,7 +226,7 @@
 .animate-wiggle { animation: wiggle 1s ease-in-out infinite; }
 
 /* Cursor glow */
-.cursor-glow {
+  .cursor-glow {
   position: fixed;
   pointer-events: none;
   width: 400px; height: 400px;
@@ -233,7 +234,7 @@
   background: radial-gradient(circle, hsl(24 93% 53% / 0.08), transparent 60%);
   transform: translate(-50%, -50%);
   z-index: 1;
-  mix-blend-mode: multiply;
+   mix-blend-mode: screen;
   transition: opacity 0.3s;
 }
 

@@ -21,9 +21,9 @@ const features = [
 ];
 
 export const Footer = () => (
-  <footer className="relative bg-white">
+  <footer className="relative bg-[#0b0718]">
     {/* Feature strip */}
-    <div className="border-t border-border">
+    <div className="border-t border-white/10 bg-[#100b26]">
       <div className="container-festive grid gap-8 sm:grid-cols-2 lg:grid-cols-5 py-12 px-4 md:px-8">
         {features.map((f, i) => (
           <div key={i} className="flex items-start gap-3">
@@ -43,7 +43,7 @@ export const Footer = () => (
     </div>
 
     {/* Main footer */}
-    <div className="bg-[hsl(273,45%,16%)] text-white">
+     <div className="bg-[#0b0718] text-white">
       <div className="container-festive section-pad !py-14 grid gap-10 md:grid-cols-2 lg:grid-cols-5 px-4 md:px-8">
         <div className="lg:col-span-1">
           <Link to="/" className="flex items-center gap-2 mb-3">
