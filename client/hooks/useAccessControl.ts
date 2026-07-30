@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { adminAuth } from "@/hooks/useAdminAuth";
+import { api } from "@/lib/api";
 
 export type AdminPageKey =
   | "dashboard"
@@ -158,6 +159,8 @@ export const accessStore = {
   setRoles(r: Role[]) {
     localStorage.setItem(ROLES_KEY, JSON.stringify(r));
     window.dispatchEvent(new Event("access-change"));
+    // Sync to API (fire-and-forget; failure is silently ignored so localStorage stays as fallback)
+    api.put("/access-control/roles", r).catch(() => {});
   },
   getAssignments(): UserAssignment[] {
     try {
@@ -170,6 +173,29 @@ export const accessStore = {
   setAssignments(a: UserAssignment[]) {
     localStorage.setItem(ASSIGN_KEY, JSON.stringify(a));
     window.dispatchEvent(new Event("access-change"));
+    // Sync to API
+    api.put("/access-control/assignments", a).catch(() => {});
+  },
+  /** Fetch from API and populate localStorage cache. Falls back to existing localStorage data on error. */
+  async syncFromApi(): Promise<void> {
+    try {
+      const [rolesRes, assignRes] = await Promise.all([
+        api.get<{ data: Role[] }>("/access-control/roles"),
+        api.get<{ data: UserAssignment[] }>("/access-control/assignments"),
+      ]);
+      if (rolesRes?.data?.length) {
+        const roles = rolesRes.data.map(migrateRole);
+        const sa = roles.find((r) => r.id === "super_admin");
+        if (sa) sa.permissions = fullAccess();
+        localStorage.setItem(ROLES_KEY, JSON.stringify(roles));
+      }
+      if (rolesRes?.data && assignRes?.data) {
+        localStorage.setItem(ASSIGN_KEY, JSON.stringify(assignRes.data));
+      }
+      window.dispatchEvent(new Event("access-change"));
+    } catch {
+      // DB not available — keep using localStorage defaults silently
+    }
   },
 };
 
@@ -221,6 +247,9 @@ export const useAccessControl = () => {
   );
 
   useEffect(() => {
+    // Hydrate from API on first mount; falls back to localStorage if API unavailable
+    accessStore.syncFromApi();
+
     const h = () => {
       setRoles(accessStore.getRoles());
       setAssignments(accessStore.getAssignments());

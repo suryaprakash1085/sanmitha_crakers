@@ -11,6 +11,7 @@ import { Download, Eye } from "lucide-react";
 import { settingsStore, PdfSettings } from "@/lib/appSettings";
 import { buildInvoicePdf } from "@/lib/invoicePdf";
 import { PageHeader } from "@/components/admin/PageHeader";
+import { usePagePermissions } from "@/hooks/useAccessControl";
 
 const sampleData = {
   invoiceNo: "ORD-001002",
@@ -33,6 +34,7 @@ const sampleData = {
 };
 
 export default function PdfTemplate() {
+  const perms = usePagePermissions("pdf-template");
   const [v, setV] = useState<PdfSettings>(settingsStore.getPdf());
   const [previewUrl, setPreviewUrl] = useState<string>("");
 
@@ -65,7 +67,7 @@ export default function PdfTemplate() {
           <div className="flex gap-2">
             <Button variant="outline" onClick={generatePreview}><Eye className="w-4 h-4 mr-2" />Live Preview</Button>
             <Button variant="outline" onClick={downloadSample}><Download className="w-4 h-4 mr-2" />Sample PDF</Button>
-            <Button onClick={save}>Save Template</Button>
+            {perms.put && <Button onClick={save}>Save Template</Button>}
           </div>
         }
       />

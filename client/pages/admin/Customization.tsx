@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { settingsStore, AppCustom } from "@/lib/appSettings";
+import { usePagePermissions } from "@/hooks/useAccessControl";
 
 const FONTS = [
   "Poppins, system-ui, sans-serif",
@@ -28,6 +29,7 @@ const PRESET_COLORS = [
 ];
 
 export default function Customization() {
+  const perms = usePagePermissions("customization");
   const [v, setV] = useState<AppCustom>(settingsStore.getApp());
   const upd = <K extends keyof AppCustom>(k: K, val: AppCustom[K]) =>
     setV((p) => ({ ...p, [k]: val }));
@@ -123,7 +125,7 @@ export default function Customization() {
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={save} size="lg">Save & Apply</Button>
+        {perms.put && <Button onClick={save} size="lg">Save & Apply</Button>}
       </div>
     </div>
   );

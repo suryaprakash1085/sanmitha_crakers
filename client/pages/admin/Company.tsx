@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { ImagePicker } from "@/components/admin/ImagePicker";
 import { api } from "@/lib/api";
+import { usePagePermissions } from "@/hooks/useAccessControl";
 
 interface CompanyForm {
   company_name: string;
@@ -32,6 +33,7 @@ const empty: CompanyForm = {
 };
 
 export default function Company() {
+  const perms = usePagePermissions("company");
   const [form, setForm] = useState<CompanyForm>(empty);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -75,7 +77,7 @@ export default function Company() {
         </div>
         <div><Label>Website</Label><Input placeholder="https://example.com" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} disabled={loading} /></div>
         <div><Label>Company Description</Label><Textarea placeholder="A short description about your company" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} disabled={loading} /></div>
-        <Button onClick={save} disabled={loading || saving}>{saving ? "Saving..." : "Save"}</Button>
+        {perms.put && <Button onClick={save} disabled={loading || saving}>{saving ? "Saving..." : "Save"}</Button>}
       </Card>
     </div>
   );

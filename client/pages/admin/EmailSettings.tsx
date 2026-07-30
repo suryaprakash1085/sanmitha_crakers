@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Mail, Server, Lock, CheckCircle2 } from "lucide-react";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { api } from "@/lib/api";
+import { usePagePermissions } from "@/hooks/useAccessControl";
 
 interface EmailSettingsType {
   smtpHost: string;
@@ -40,6 +41,7 @@ const PRESETS: Record<string, { host: string; port: number; secure: boolean }> =
 };
 
 export default function EmailSettings() {
+  const perms = usePagePermissions("email-settings");
   const [v, setV] = useState<EmailSettingsType>(empty);
   const [preset, setPreset] = useState("Custom");
   const [loading, setLoading] = useState(true);
@@ -191,12 +193,16 @@ export default function EmailSettings() {
           </div>
 
           <div className="flex gap-3 pt-2">
-            <Button onClick={save} className="flex-1" disabled={loading || saving}>
-              {saving ? "Saving..." : "Save Settings"}
-            </Button>
-            <Button variant="outline" onClick={testConnection} disabled={testing || loading}>
-              {testing ? "Testing..." : "Test Connection"}
-            </Button>
+            {perms.put && (
+              <Button onClick={save} className="flex-1" disabled={loading || saving}>
+                {saving ? "Saving..." : "Save Settings"}
+              </Button>
+            )}
+            {perms.post && (
+              <Button variant="outline" onClick={testConnection} disabled={testing || loading}>
+                {testing ? "Testing..." : "Test Connection"}
+              </Button>
+            )}
           </div>
         </Card>
 
@@ -217,9 +223,11 @@ export default function EmailSettings() {
               onChange={(e) => setTestTo(e.target.value)}
               className="md:flex-1"
             />
-            <Button onClick={sendTestEmail} disabled={sendingTest || loading}>
-              {sendingTest ? "Sending..." : "Send Test Email"}
-            </Button>
+            {perms.post && (
+              <Button onClick={sendTestEmail} disabled={sendingTest || loading}>
+                {sendingTest ? "Sending..." : "Send Test Email"}
+              </Button>
+            )}
           </div>
         </Card>
 
