@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trash2, Shield, Users as UsersIcon } from "lucide-react";
+import { Plus, Trash2, Shield, Users as UsersIcon, Pencil, Check, X } from "lucide-react";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,15 @@ const METHODS: { key: HttpMethod; label: string; color: string }[] = [
 ];
 
 const NO_PERMS: MethodPerms = { get: false, post: false, put: false, delete: false };
+const ALL_PERMS: MethodPerms = { get: true, post: true, put: true, delete: true };
+
+// ── Inline-edit state per role card ─────────────────────────────────────────
+interface EditDraft {
+  name: string;
+  description: string;
+  /** pages the role has GET access to */
+  pages: Set<AdminPageKey>;
+}
 
 export default function AccessControl() {
   const { roles, assignments } = useAccessControl();
@@ -36,10 +45,13 @@ export default function AccessControl() {
   const [newRole, setNewRole] = useState({ name: "", description: "" });
   const [newAssign, setNewAssign] = useState({ email: "", roleId: "" });
 
+  // map of roleId → active draft (only set while editing)
+  const [drafts, setDrafts] = useState<Record<string, EditDraft>>({});
+
   const selectedRole = roles.find((r) => r.id === selectedRoleId) ?? roles[0];
   const isSuperAdmin = selectedRole?.id === "super_admin";
 
-  // ── permission toggles ──────────────────────────────────────────────────────
+  // ── permission toggles (matrix tab) ─────────────────────────────────────
 
   const toggleMethod = (pageKey: AdminPageKey, method: HttpMethod) => {
     if (isSuperAdmin) return;
@@ -86,7 +98,7 @@ export default function AccessControl() {
     accessStore.setRoles(next);
   };
 
-  // ── role management ─────────────────────────────────────────────────────────
+  // ── role management ──────────────────────────────────────────────────────
 
   const addRole = () => {
     if (!newRole.name.trim()) return toast.error("Role name required");
@@ -109,10 +121,66 @@ export default function AccessControl() {
     accessStore.setRoles(roles.filter((r) => r.id !== id));
     accessStore.setAssignments(assignments.filter((a) => a.roleId !== id));
     if (selectedRoleId === id) setSelectedRoleId(roles[0]?.id ?? "super_admin");
+    // clear any open draft
+    setDrafts((d) => { const n = { ...d }; delete n[id]; return n; });
     toast.success("Role deleted");
   };
 
-  // ── assignment management ───────────────────────────────────────────────────
+  // ── inline edit helpers ──────────────────────────────────────────────────
+
+  const startEdit = (r: Role) => {
+    if (r.id === "super_admin") return;
+    const pages = new Set<AdminPageKey>(
+      ADMIN_PAGES.filter((p) => r.permissions[p.key]?.get).map((p) => p.key)
+    );
+    setDrafts((d) => ({
+      ...d,
+      [r.id]: { name: r.name, description: r.description, pages },
+    }));
+  };
+
+  const cancelEdit = (id: string) => {
+    setDrafts((d) => { const n = { ...d }; delete n[id]; return n; });
+  };
+
+  const saveEdit = (r: Role) => {
+    const draft = drafts[r.id];
+    if (!draft) return;
+    if (!draft.name.trim()) return toast.error("Role name required");
+
+    // rebuild permissions: keep existing method perms for pages that remain,
+    // add full access for newly-added pages, drop removed pages
+    const newPerms: Record<string, MethodPerms> = {};
+    for (const pageKey of Array.from(draft.pages)) {
+      // preserve existing fine-grained perms if present, else grant all
+      newPerms[pageKey] = r.permissions[pageKey] ?? { ...ALL_PERMS };
+      // always ensure GET is true (page is "added")
+      newPerms[pageKey] = { ...newPerms[pageKey], get: true };
+    }
+
+    const updated: Role = {
+      ...r,
+      name: draft.name.trim(),
+      description: draft.description.trim(),
+      permissions: newPerms,
+    };
+    accessStore.setRoles(roles.map((x) => (x.id === r.id ? updated : x)));
+    cancelEdit(r.id);
+    toast.success("Role updated");
+  };
+
+  const draftTogglePage = (roleId: string, pageKey: AdminPageKey) => {
+    setDrafts((d) => {
+      const draft = d[roleId];
+      if (!draft) return d;
+      const pages = new Set(draft.pages);
+      if (pages.has(pageKey)) pages.delete(pageKey);
+      else pages.add(pageKey);
+      return { ...d, [roleId]: { ...draft, pages } };
+    });
+  };
+
+  // ── assignment management ────────────────────────────────────────────────
 
   const addAssignment = () => {
     if (!newAssign.email.trim() || !newAssign.roleId)
@@ -135,7 +203,7 @@ export default function AccessControl() {
     toast.success("Assignment removed");
   };
 
-  // ── helpers ─────────────────────────────────────────────────────────────────
+  // ── matrix helpers ───────────────────────────────────────────────────────
 
   const getMethod = (pageKey: AdminPageKey, method: HttpMethod): boolean => {
     if (isSuperAdmin) return true;
@@ -250,14 +318,11 @@ export default function AccessControl() {
                           hasAny ? "hover:bg-violet-50/30" : "hover:bg-slate-50/50 opacity-60"
                         }`}
                       >
-                        {/* Page label */}
                         <td className="px-5 py-3">
                           <span className={`font-medium ${hasAny ? "text-slate-700" : "text-slate-400"}`}>
                             {p.label}
                           </span>
                         </td>
-
-                        {/* Row-level toggle (toggles all methods for this page) */}
                         <td className="px-3 py-3 text-center">
                           <Checkbox
                             checked={hasAny}
@@ -266,8 +331,6 @@ export default function AccessControl() {
                             className="mx-auto"
                           />
                         </td>
-
-                        {/* Per-method checkboxes */}
                         {METHODS.map((m) => (
                           <td key={m.key} className="px-4 py-3 text-center">
                             <Checkbox
@@ -289,6 +352,7 @@ export default function AccessControl() {
 
         {/* ── ROLES ──────────────────────────────────────────────────────── */}
         <TabsContent value="roles" className="space-y-4">
+          {/* Add role form */}
           <div className="rounded-2xl border border-gray-200 bg-white p-5">
             <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto] items-end">
               <div>
@@ -296,6 +360,7 @@ export default function AccessControl() {
                 <Input
                   value={newRole.name}
                   onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
+                  onKeyDown={(e) => e.key === "Enter" && addRole()}
                   placeholder="e.g. Support"
                 />
               </div>
@@ -304,6 +369,7 @@ export default function AccessControl() {
                 <Input
                   value={newRole.description}
                   onChange={(e) => setNewRole({ ...newRole, description: e.target.value })}
+                  onKeyDown={(e) => e.key === "Enter" && addRole()}
                   placeholder="Short description"
                 />
               </div>
@@ -313,41 +379,145 @@ export default function AccessControl() {
             </div>
           </div>
 
+          {/* Role cards */}
           <div className="grid gap-3">
             {roles.map((r) => {
-              const grantedPages = ADMIN_PAGES.filter(
-                (p) => r.id === "super_admin" || r.permissions[p.key]?.get
-              );
+              const draft = drafts[r.id];
+              const isEditing = !!draft;
+              const grantedPages = isEditing
+                ? ADMIN_PAGES.filter((p) => draft.pages.has(p.key))
+                : ADMIN_PAGES.filter(
+                    (p) => r.id === "super_admin" || r.permissions[p.key]?.get
+                  );
+
               return (
                 <div
                   key={r.id}
-                  className="rounded-2xl border border-gray-200 bg-white p-5 flex items-start justify-between gap-4"
+                  className={`rounded-2xl border bg-white p-5 transition-all ${
+                    isEditing ? "border-violet-300 shadow-md" : "border-gray-200"
+                  }`}
                 >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold text-slate-800">{r.name}</h3>
-                      <Badge variant="secondary">{grantedPages.length} pages visible</Badge>
-                      {r.id === "super_admin" && <Badge>system</Badge>}
+                  {isEditing ? (
+                    /* ── EDIT MODE ─────────────────────────────────────── */
+                    <div className="space-y-4">
+                      {/* Name + Description row */}
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <div>
+                          <Label className="text-xs text-slate-500 mb-1 block">Role Name</Label>
+                          <Input
+                            value={draft.name}
+                            onChange={(e) =>
+                              setDrafts((d) => ({
+                                ...d,
+                                [r.id]: { ...d[r.id], name: e.target.value },
+                              }))
+                            }
+                            autoFocus
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-slate-500 mb-1 block">Description</Label>
+                          <Input
+                            value={draft.description}
+                            onChange={(e) =>
+                              setDrafts((d) => ({
+                                ...d,
+                                [r.id]: { ...d[r.id], description: e.target.value },
+                              }))
+                            }
+                            placeholder="Short description"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Page toggles */}
+                      <div>
+                        <Label className="text-xs text-slate-500 mb-2 block">
+                          Pages (GET access)
+                        </Label>
+                        <div className="flex flex-wrap gap-2">
+                          {ADMIN_PAGES.map((p) => {
+                            const active = draft.pages.has(p.key);
+                            return (
+                              <button
+                                key={p.key}
+                                type="button"
+                                onClick={() => draftTogglePage(r.id, p.key)}
+                                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border transition-all ${
+                                  active
+                                    ? "bg-violet-100 text-violet-700 border-violet-300"
+                                    : "bg-white text-slate-400 border-slate-200 hover:border-slate-300"
+                                }`}
+                              >
+                                {active ? (
+                                  <X className="h-3 w-3" />
+                                ) : (
+                                  <Plus className="h-3 w-3" />
+                                )}
+                                {p.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <p className="text-xs text-slate-400 mt-2">
+                          {draft.pages.size} page{draft.pages.size !== 1 ? "s" : ""} selected — click to toggle. Fine-grained POST/PUT/DELETE permissions are managed in the Permission Matrix.
+                        </p>
+                      </div>
+
+                      {/* Save / Cancel */}
+                      <div className="flex items-center gap-2 pt-1">
+                        <Button size="sm" onClick={() => saveEdit(r)}>
+                          <Check className="h-3.5 w-3.5 mr-1" /> Save
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => cancelEdit(r.id)}>
+                          <X className="h-3.5 w-3.5 mr-1" /> Cancel
+                        </Button>
+                      </div>
                     </div>
-                    {r.description && (
-                      <p className="text-sm text-slate-400 mt-1">{r.description}</p>
-                    )}
-                    <div className="flex flex-wrap gap-1.5 mt-3">
-                      {grantedPages.map((p) => (
-                        <Badge key={p.key} variant="outline" className="text-xs">
-                          {p.label}
-                        </Badge>
-                      ))}
+                  ) : (
+                    /* ── VIEW MODE ─────────────────────────────────────── */
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-semibold text-slate-800">{r.name}</h3>
+                          <Badge variant="secondary">{grantedPages.length} pages visible</Badge>
+                          {r.id === "super_admin" && <Badge>system</Badge>}
+                        </div>
+                        {r.description && (
+                          <p className="text-sm text-slate-400 mt-1">{r.description}</p>
+                        )}
+                        <div className="flex flex-wrap gap-1.5 mt-3">
+                          {grantedPages.map((p) => (
+                            <Badge key={p.key} variant="outline" className="text-xs">
+                              {p.label}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => startEdit(r)}
+                          disabled={r.id === "super_admin"}
+                          title="Edit role"
+                        >
+                          <Pencil className="h-4 w-4 text-slate-400" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => deleteRole(r.id)}
+                          disabled={r.id === "super_admin"}
+                          title="Delete role"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-400" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => deleteRole(r.id)}
-                    disabled={r.id === "super_admin"}
-                  >
-                    <Trash2 className="h-4 w-4 text-red-400" />
-                  </Button>
+                  )}
                 </div>
               );
             })}
