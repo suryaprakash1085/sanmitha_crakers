@@ -116,9 +116,9 @@ const defaultRoles: Role[] = [
   },
 ];
 
-const defaultAssignments: UserAssignment[] = [
-  { email: "admin@firecrackers.com", roleId: "super_admin" },
-];
+// No default email→role mappings. Sidebar permissions fall back to the
+// user's role field from the JWT (e.g. "admin", "editor") instead.
+const defaultAssignments: UserAssignment[] = [];
 
 // ─── migration: old format had permissions: AdminPageKey[] ────────────────────
 
@@ -165,7 +165,21 @@ export const accessStore = {
   getAssignments(): UserAssignment[] {
     try {
       const raw = localStorage.getItem(ASSIGN_KEY);
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        const parsed: UserAssignment[] = JSON.parse(raw);
+        // Migration: the old code always seeded admin@firecrackers.com → super_admin
+        // as the only assignment. That bypassed role-based permissions. Remove it
+        // so the user's JWT role field drives sidebar access instead.
+        const isLegacyDefault =
+          parsed.length === 1 &&
+          parsed[0].email === "admin@firecrackers.com" &&
+          parsed[0].roleId === "super_admin";
+        if (isLegacyDefault) {
+          localStorage.setItem(ASSIGN_KEY, JSON.stringify([]));
+          return [];
+        }
+        return parsed;
+      }
     } catch {}
     localStorage.setItem(ASSIGN_KEY, JSON.stringify(defaultAssignments));
     return defaultAssignments;
@@ -204,25 +218,36 @@ export const accessStore = {
 const NO_PERMS: MethodPerms = { get: false, post: false, put: false, delete: false };
 
 /**
- * Return the effective method-level permissions for `email` on `pageKey`.
- * Falls back to full access if the user has no assignment (backwards-compatible).
+ * Return the effective method-level permissions for a user on `pageKey`.
+ *
+ * Resolution order:
+ * 1. Explicit email→role assignment in `assignments` (User Assignments tab)
+ * 2. `userAuthRole` — the role id from the user's JWT token (e.g. "admin")
+ * 3. Full access fallback for users with no assignment and no matching role
+ *    (backward-compatible with legacy admin accounts)
  */
 export function getPagePerms(
   roles: Role[],
   assignments: UserAssignment[],
   email: string | undefined,
-  pageKey: AdminPageKey
+  pageKey: AdminPageKey,
+  userAuthRole?: string
 ): MethodPerms {
   if (!email) return { ...NO_PERMS };
 
+  // 1. Explicit assignment overrides everything
   const assignment = assignments.find((a) => a.email === email);
-  // Unassigned admin users retain full access (backward-compatible)
-  if (!assignment) return { ...ALL_METHODS };
+  const roleId = assignment?.roleId ?? userAuthRole;
 
-  const role = roles.find((r) => r.id === assignment.roleId);
+  if (!roleId) {
+    // No assignment and no auth role — full access (legacy fallback)
+    return { ...ALL_METHODS };
+  }
+
+  const role = roles.find((r) => r.id === roleId);
   if (!role) return { ...NO_PERMS };
 
-  // super_admin always has full access regardless of stored value
+  // super_admin always has full access regardless of stored permissions
   if (role.id === "super_admin") return { ...ALL_METHODS };
 
   return role.permissions[pageKey] ?? { ...NO_PERMS };
@@ -236,8 +261,8 @@ export function getPagePerms(
  */
 export const usePagePermissions = (pageKey: AdminPageKey): MethodPerms => {
   const { roles, assignments } = useAccessControl();
-  const email: string | undefined = adminAuth.current()?.email;
-  return getPagePerms(roles, assignments, email, pageKey);
+  const currentUser = adminAuth.current();
+  return getPagePerms(roles, assignments, currentUser?.email, pageKey, currentUser?.role);
 };
 
 export const useAccessControl = () => {

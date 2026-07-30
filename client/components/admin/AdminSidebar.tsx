@@ -51,10 +51,11 @@ export function AdminSidebar() {
   const { roles, assignments } = useAccessControl();
   const currentUser = adminAuth.current();
   const userEmail = currentUser?.email;
+  const userRole = currentUser?.role; // JWT role field e.g. "admin", "editor"
 
-  // Only show items where the current user has GET permission
+  // Only show items where the current user has GET permission for their role
   const visibleItems = items.filter((item) => {
-    const perms = getPagePerms(roles, assignments, userEmail, item.pageKey);
+    const perms = getPagePerms(roles, assignments, userEmail, item.pageKey, userRole);
     return perms.get;
   });
 
