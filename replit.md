@@ -16,9 +16,12 @@ server.mjs       cPanel production entry point (import built server)
 
 ## Running on Replit (Development)
 ```
-npm run dev      # Starts Vite dev server on port 5000 (frontend + API together)
+pnpm dev      # Starts Vite dev server on port 5000 (frontend + API together)
 ```
 The Vite dev server proxies `/api/*` requests to the embedded Express app.
+
+**Note:** `DATABASE_HOST` must be your actual MySQL server's public hostname or IP.
+On Replit, `localhost` has no MySQL — set the host to your cPanel/remote server address.
 
 ## Building for cPanel (Production)
 ```
