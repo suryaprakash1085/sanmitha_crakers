@@ -13,10 +13,12 @@ import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { useCrudModal } from "@/hooks/useCrudModal";
 import { TableFilters } from "@/components/admin/TableFilters";
 import { api } from "@/lib/api";
+import { usePagePermissions } from "@/hooks/useAccessControl";
 
 interface Service { id: number; name: string; description: string; price: number; }
 
 export default function Services() {
+  const perms = usePagePermissions("services");
   const [items, setItems] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const modal = useCrudModal<Service>();
@@ -77,7 +79,7 @@ export default function Services() {
     { header: "Name", cell: (s) => s.name },
     { header: "Description", cell: (s) => <span className="line-clamp-1">{s.description}</span> },
     { header: "Price", cell: (s) => `₹${s.price}` },
-    { header: "Actions", cell: (s) => <RowActions onView={() => modal.openView(s)} onEdit={() => onEdit(s)} onDelete={() => modal.openDelete(s)} /> },
+    { header: "Actions", cell: (s) => <RowActions onView={() => modal.openView(s)} onEdit={perms.put ? () => onEdit(s) : undefined} onDelete={perms.delete ? () => modal.openDelete(s) : undefined} /> },
   ];
 
   return (
@@ -85,7 +87,7 @@ export default function Services() {
       <PageHeader
         title="Services"
         description="Manage offered services"
-        action={<Button onClick={onCreate}><Plus className="h-4 w-4" /> Add Service</Button>}
+        action={perms.post ? <Button onClick={onCreate}><Plus className="h-4 w-4" /> Add Service</Button> : undefined}
       />
       <TableFilters search={search} onSearchChange={setSearch} placeholder="Search services..." />
       <DataTable columns={columns} data={filtered} rowKey={(s) => s.id} empty={loading ? "Loading..." : "No services found"} />

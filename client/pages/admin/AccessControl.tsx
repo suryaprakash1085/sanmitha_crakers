@@ -14,34 +14,79 @@ import {
   accessStore,
   useAccessControl,
   type AdminPageKey,
+  type HttpMethod,
+  type MethodPerms,
   type Role,
 } from "@/hooks/useAccessControl";
 
+const METHODS: { key: HttpMethod; label: string; color: string }[] = [
+  { key: "get",    label: "GET",    color: "text-emerald-600" },
+  { key: "post",   label: "POST",   color: "text-blue-600"    },
+  { key: "put",    label: "PUT",    color: "text-amber-600"   },
+  { key: "delete", label: "DELETE", color: "text-red-600"     },
+];
+
+const NO_PERMS: MethodPerms = { get: false, post: false, put: false, delete: false };
+
 export default function AccessControl() {
   const { roles, assignments } = useAccessControl();
+  const [selectedRoleId, setSelectedRoleId] = useState<string>(
+    roles[0]?.id ?? "super_admin"
+  );
   const [newRole, setNewRole] = useState({ name: "", description: "" });
   const [newAssign, setNewAssign] = useState({ email: "", roleId: "" });
 
-  const togglePerm = (roleId: string, key: AdminPageKey) => {
+  const selectedRole = roles.find((r) => r.id === selectedRoleId) ?? roles[0];
+  const isSuperAdmin = selectedRole?.id === "super_admin";
+
+  // ── permission toggles ──────────────────────────────────────────────────────
+
+  const toggleMethod = (pageKey: AdminPageKey, method: HttpMethod) => {
+    if (isSuperAdmin) return;
     const next = roles.map((r) => {
-      if (r.id !== roleId) return r;
-      const has = r.permissions.includes(key);
+      if (r.id !== selectedRoleId) return r;
+      const cur: MethodPerms = r.permissions[pageKey] ?? { ...NO_PERMS };
       return {
         ...r,
-        permissions: has ? r.permissions.filter((k) => k !== key) : [...r.permissions, key],
+        permissions: {
+          ...r.permissions,
+          [pageKey]: { ...cur, [method]: !cur[method] },
+        },
       };
     });
     accessStore.setRoles(next);
   };
 
-  const toggleAll = (roleId: string, checked: boolean) => {
+  const setPageAllMethods = (pageKey: AdminPageKey, value: boolean) => {
+    if (isSuperAdmin) return;
+    const next = roles.map((r) => {
+      if (r.id !== selectedRoleId) return r;
+      return {
+        ...r,
+        permissions: {
+          ...r.permissions,
+          [pageKey]: { get: value, post: value, put: value, delete: value },
+        },
+      };
+    });
+    accessStore.setRoles(next);
+  };
+
+  const setRoleAllMethods = (value: boolean) => {
+    if (isSuperAdmin) return;
+    const allPerms = Object.fromEntries(
+      ADMIN_PAGES.map((p) => [
+        p.key,
+        { get: value, post: value, put: value, delete: value },
+      ])
+    );
     const next = roles.map((r) =>
-      r.id === roleId
-        ? { ...r, permissions: checked ? ADMIN_PAGES.map((p) => p.key) : [] }
-        : r
+      r.id === selectedRoleId ? { ...r, permissions: allPerms } : r
     );
     accessStore.setRoles(next);
   };
+
+  // ── role management ─────────────────────────────────────────────────────────
 
   const addRole = () => {
     if (!newRole.name.trim()) return toast.error("Role name required");
@@ -51,10 +96,11 @@ export default function AccessControl() {
       id,
       name: newRole.name,
       description: newRole.description,
-      permissions: ["dashboard"],
+      permissions: { dashboard: { get: true, post: false, put: false, delete: false } },
     };
     accessStore.setRoles([...roles, r]);
     setNewRole({ name: "", description: "" });
+    setSelectedRoleId(id);
     toast.success("Role created");
   };
 
@@ -62,11 +108,15 @@ export default function AccessControl() {
     if (id === "super_admin") return toast.error("Cannot delete Super Admin");
     accessStore.setRoles(roles.filter((r) => r.id !== id));
     accessStore.setAssignments(assignments.filter((a) => a.roleId !== id));
+    if (selectedRoleId === id) setSelectedRoleId(roles[0]?.id ?? "super_admin");
     toast.success("Role deleted");
   };
 
+  // ── assignment management ───────────────────────────────────────────────────
+
   const addAssignment = () => {
-    if (!newAssign.email.trim() || !newAssign.roleId) return toast.error("Email and role required");
+    if (!newAssign.email.trim() || !newAssign.roleId)
+      return toast.error("Email and role required");
     if (assignments.some((a) => a.email === newAssign.email))
       return toast.error("User already assigned — update instead");
     accessStore.setAssignments([...assignments, { ...newAssign }]);
@@ -75,7 +125,9 @@ export default function AccessControl() {
   };
 
   const updateAssignment = (email: string, roleId: string) => {
-    accessStore.setAssignments(assignments.map((a) => (a.email === email ? { ...a, roleId } : a)));
+    accessStore.setAssignments(
+      assignments.map((a) => (a.email === email ? { ...a, roleId } : a))
+    );
   };
 
   const removeAssignment = (email: string) => {
@@ -83,11 +135,31 @@ export default function AccessControl() {
     toast.success("Assignment removed");
   };
 
+  // ── helpers ─────────────────────────────────────────────────────────────────
+
+  const getMethod = (pageKey: AdminPageKey, method: HttpMethod): boolean => {
+    if (isSuperAdmin) return true;
+    return selectedRole?.permissions[pageKey]?.[method] ?? false;
+  };
+
+  const pageHasAnyMethod = (pageKey: AdminPageKey): boolean =>
+    METHODS.some((m) => getMethod(pageKey, m.key));
+
+  const totalGrants = (): number => {
+    if (!selectedRole) return 0;
+    if (isSuperAdmin) return ADMIN_PAGES.length * 4;
+    return ADMIN_PAGES.reduce((sum, p) => {
+      const perms = selectedRole.permissions[p.key];
+      if (!perms) return sum;
+      return sum + METHODS.filter((m) => perms[m.key]).length;
+    }, 0);
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Access Control"
-        description="Manage roles and page permissions"
+        description="Manage roles and page-level HTTP permissions"
         icon={<Shield className="h-5 w-5" />}
       />
 
@@ -98,53 +170,126 @@ export default function AccessControl() {
           <TabsTrigger value="assignments">User Assignments</TabsTrigger>
         </TabsList>
 
-        {/* MATRIX */}
-        <TabsContent value="matrix">
-          <div className="rounded-2xl border border-gray-200 bg-white overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-gray-200">
-                <tr>
-                  <th className="text-left p-4 font-semibold text-slate-200 sticky left-0 border-gray-200">
-                    Page
-                  </th>
-                  {roles.map((r) => (
-                    <th key={r.id} className="p-4 font-semibold text-slate-200 text-center min-w-[140px]">
-                      <div>{r.name}</div>
+        {/* ── MATRIX ─────────────────────────────────────────────────────── */}
+        <TabsContent value="matrix" className="space-y-4">
+          {/* Role selector */}
+          <div className="flex flex-wrap items-center gap-2">
+            {roles.map((r) => (
+              <button
+                key={r.id}
+                onClick={() => setSelectedRoleId(r.id)}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                  selectedRoleId === r.id
+                    ? "bg-violet-600 text-white border-violet-600 shadow-sm"
+                    : "bg-white text-slate-600 border-slate-200 hover:border-violet-300 hover:text-violet-600"
+                }`}
+              >
+                {r.name}
+              </button>
+            ))}
+          </div>
+
+          {selectedRole && (
+            <div className="rounded-2xl border border-gray-200 bg-white overflow-x-auto shadow-sm">
+              {/* Header */}
+              <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
+                <div>
+                  <span className="font-semibold text-slate-800">{selectedRole.name}</span>
+                  {selectedRole.description && (
+                    <span className="ml-2 text-xs text-slate-400">{selectedRole.description}</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-slate-400">
+                    {totalGrants()} / {ADMIN_PAGES.length * 4} permissions granted
+                  </span>
+                  {!isSuperAdmin && (
+                    <div className="flex gap-2">
                       <button
-                        className="text-[10px] text-violet-400 hover:underline mt-1"
-                        onClick={() =>
-                          toggleAll(r.id, r.permissions.length !== ADMIN_PAGES.length)
-                        }
+                        onClick={() => setRoleAllMethods(true)}
+                        className="text-xs text-violet-500 hover:underline"
                       >
-                        {r.permissions.length === ADMIN_PAGES.length ? "Clear all" : "Select all"}
+                        Grant all
                       </button>
+                      <span className="text-slate-300">|</span>
+                      <button
+                        onClick={() => setRoleAllMethods(false)}
+                        className="text-xs text-slate-400 hover:underline"
+                      >
+                        Revoke all
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100 bg-slate-50/60">
+                    <th className="text-left px-5 py-3 font-semibold text-slate-500 w-48">Page</th>
+                    <th className="px-3 py-3 text-center font-semibold text-slate-400 text-xs w-10">
+                      Access
                     </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {ADMIN_PAGES.map((p) => (
-                  <tr key={p.key} className="border-t border-white/5 hover:bg-slate-800/30">
-                    <td className="p-4 text-slate-300 sticky left-0 border-gray-200">{p.label}</td>
-                    {roles.map((r) => (
-                      <td key={r.id} className="p-4 text-center">
-                        <Checkbox
-                          checked={r.permissions.includes(p.key)}
-                          onCheckedChange={() => togglePerm(r.id, p.key)}
-                          disabled={r.id === "super_admin"}
-                        />
-                      </td>
+                    {METHODS.map((m) => (
+                      <th
+                        key={m.key}
+                        className={`px-4 py-3 text-center font-bold text-xs tracking-widest ${m.color} min-w-[72px]`}
+                      >
+                        {m.label}
+                      </th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {ADMIN_PAGES.map((p) => {
+                    const hasAny = pageHasAnyMethod(p.key);
+                    return (
+                      <tr
+                        key={p.key}
+                        className={`border-t border-gray-50 transition-colors ${
+                          hasAny ? "hover:bg-violet-50/30" : "hover:bg-slate-50/50 opacity-60"
+                        }`}
+                      >
+                        {/* Page label */}
+                        <td className="px-5 py-3">
+                          <span className={`font-medium ${hasAny ? "text-slate-700" : "text-slate-400"}`}>
+                            {p.label}
+                          </span>
+                        </td>
+
+                        {/* Row-level toggle (toggles all methods for this page) */}
+                        <td className="px-3 py-3 text-center">
+                          <Checkbox
+                            checked={hasAny}
+                            disabled={isSuperAdmin}
+                            onCheckedChange={(v) => setPageAllMethods(p.key, !!v)}
+                            className="mx-auto"
+                          />
+                        </td>
+
+                        {/* Per-method checkboxes */}
+                        {METHODS.map((m) => (
+                          <td key={m.key} className="px-4 py-3 text-center">
+                            <Checkbox
+                              checked={getMethod(p.key, m.key)}
+                              disabled={isSuperAdmin}
+                              onCheckedChange={() => toggleMethod(p.key, m.key)}
+                              className="mx-auto"
+                            />
+                          </td>
+                        ))}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </TabsContent>
 
-        {/* ROLES */}
+        {/* ── ROLES ──────────────────────────────────────────────────────── */}
         <TabsContent value="roles" className="space-y-4">
-          <div className="rounded-2xl border border-white/5 border-gray-200 p-5">
+          <div className="rounded-2xl border border-gray-200 bg-white p-5">
             <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto] items-end">
               <div>
                 <Label>Role Name</Label>
@@ -169,45 +314,49 @@ export default function AccessControl() {
           </div>
 
           <div className="grid gap-3">
-            {roles.map((r) => (
-              <div
-                key={r.id}
-                className="rounded-2xl border border-white/5 border-gray-200 p-5 flex items-start justify-between gap-4"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-slate-100">{r.name}</h3>
-                    <Badge variant="secondary">{r.permissions.length} pages</Badge>
-                    {r.id === "super_admin" && <Badge>system</Badge>}
-                  </div>
-                  <p className="text-sm text-slate-400 mt-1">{r.description}</p>
-                  <div className="flex flex-wrap gap-1.5 mt-3">
-                    {r.permissions.map((k) => {
-                      const p = ADMIN_PAGES.find((x) => x.key === k);
-                      return p ? (
-                        <Badge key={k} variant="outline" className="text-xs">
+            {roles.map((r) => {
+              const grantedPages = ADMIN_PAGES.filter(
+                (p) => r.id === "super_admin" || r.permissions[p.key]?.get
+              );
+              return (
+                <div
+                  key={r.id}
+                  className="rounded-2xl border border-gray-200 bg-white p-5 flex items-start justify-between gap-4"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-semibold text-slate-800">{r.name}</h3>
+                      <Badge variant="secondary">{grantedPages.length} pages visible</Badge>
+                      {r.id === "super_admin" && <Badge>system</Badge>}
+                    </div>
+                    {r.description && (
+                      <p className="text-sm text-slate-400 mt-1">{r.description}</p>
+                    )}
+                    <div className="flex flex-wrap gap-1.5 mt-3">
+                      {grantedPages.map((p) => (
+                        <Badge key={p.key} variant="outline" className="text-xs">
                           {p.label}
                         </Badge>
-                      ) : null;
-                    })}
+                      ))}
+                    </div>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => deleteRole(r.id)}
+                    disabled={r.id === "super_admin"}
+                  >
+                    <Trash2 className="h-4 w-4 text-red-400" />
+                  </Button>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => deleteRole(r.id)}
-                  disabled={r.id === "super_admin"}
-                >
-                  <Trash2 className="h-4 w-4 text-red-400" />
-                </Button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </TabsContent>
 
-        {/* ASSIGNMENTS */}
+        {/* ── ASSIGNMENTS ────────────────────────────────────────────────── */}
         <TabsContent value="assignments" className="space-y-4">
-          <div className="rounded-2xl border border-white/5 border-gray-200 p-5">
+          <div className="rounded-2xl border border-gray-200 bg-white p-5">
             <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto] items-end">
               <div>
                 <Label>User Email</Label>
@@ -241,30 +390,34 @@ export default function AccessControl() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/5 border-gray-200 overflow-hidden">
+          <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="border-gray-200">
+              <thead className="bg-slate-50/60 border-b border-gray-100">
                 <tr>
-                  <th className="text-left p-4 font-semibold text-slate-200">
-                    <UsersIcon className="h-4 w-4 inline mr-2" /> User
+                  <th className="text-left px-5 py-3 font-semibold text-slate-500">
+                    <UsersIcon className="h-4 w-4 inline mr-2" />
+                    User
                   </th>
-                  <th className="text-left p-4 font-semibold text-slate-200">Role</th>
-                  <th className="p-4" />
+                  <th className="text-left px-5 py-3 font-semibold text-slate-500">Role</th>
+                  <th className="px-5 py-3" />
                 </tr>
               </thead>
               <tbody>
                 {assignments.length === 0 && (
                   <tr>
-                    <td colSpan={3} className="p-6 text-center text-slate-500">
+                    <td colSpan={3} className="px-5 py-8 text-center text-slate-400">
                       No assignments yet
                     </td>
                   </tr>
                 )}
                 {assignments.map((a) => (
-                  <tr key={a.email} className="border-t border-white/5">
-                    <td className="p-4 text-slate-300">{a.email}</td>
-                    <td className="p-4">
-                      <Select value={a.roleId} onValueChange={(v) => updateAssignment(a.email, v)}>
+                  <tr key={a.email} className="border-t border-gray-50 hover:bg-slate-50/50">
+                    <td className="px-5 py-3 text-slate-700">{a.email}</td>
+                    <td className="px-5 py-3">
+                      <Select
+                        value={a.roleId}
+                        onValueChange={(v) => updateAssignment(a.email, v)}
+                      >
                         <SelectTrigger className="w-52">
                           <SelectValue />
                         </SelectTrigger>
@@ -277,8 +430,12 @@ export default function AccessControl() {
                         </SelectContent>
                       </Select>
                     </td>
-                    <td className="p-4 text-right">
-                      <Button variant="ghost" size="icon" onClick={() => removeAssignment(a.email)}>
+                    <td className="px-5 py-3 text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeAssignment(a.email)}
+                      >
                         <Trash2 className="h-4 w-4 text-red-400" />
                       </Button>
                     </td>

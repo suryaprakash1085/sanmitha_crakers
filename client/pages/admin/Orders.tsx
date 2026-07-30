@@ -15,6 +15,7 @@ import { TableFilters } from "@/components/admin/TableFilters";
 import { useCrudModal } from "@/hooks/useCrudModal";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
+import { usePagePermissions } from "@/hooks/useAccessControl";
 import { settingsStore } from "@/lib/appSettings";
 import { buildInvoicePdf } from "@/lib/invoicePdf";
 
@@ -66,6 +67,7 @@ const paymentMethodVariants: Record<PaymentMethod, string> = {
 const paymentMethodOptions: PaymentMethod[] = ["Pending", "Cash on Delivery", "Online Payment", "UPI", "Card"];
 
 export default function Orders() {
+  const perms = usePagePermissions("orders");
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<ProductOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -239,8 +241,8 @@ export default function Orders() {
       cell: (o) => (
         <RowActions
           onView={() => modal.openView(o)}
-          onEdit={() => onEdit(o)}
-          onDelete={() => modal.openDelete(o)}
+          onEdit={perms.put ? () => onEdit(o) : undefined}
+          onDelete={perms.delete ? () => modal.openDelete(o) : undefined}
           onDownload={() => downloadOrderPdf(o)}
           downloadTitle={downloadingId === o.id ? "Generating..." : "Download PDF"}
         />
@@ -253,7 +255,7 @@ export default function Orders() {
       <PageHeader
         title="Orders"
         description="View and update order statuses"
-        action={<Button onClick={onCreate}><Plus className="h-4 w-4" /> Add Order</Button>}
+        action={perms.post ? <Button onClick={onCreate}><Plus className="h-4 w-4" /> Add Order</Button> : undefined}
       />
       <TableFilters
         search={search}

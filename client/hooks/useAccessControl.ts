@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { adminAuth } from "@/hooks/useAdminAuth";
 
 export type AdminPageKey =
   | "dashboard"
@@ -33,11 +34,24 @@ export const ADMIN_PAGES: { key: AdminPageKey; label: string; path: string }[] =
   { key: "access-control", label: "Access Control", path: "/admin/access-control" },
 ];
 
+/** Per-HTTP-method permissions for a single page. */
+export type MethodPerms = {
+  get: boolean;
+  post: boolean;
+  put: boolean;
+  delete: boolean;
+};
+
+export type HttpMethod = keyof MethodPerms;
+
+/** Map of pageKey → method permissions for a role. */
+export type PagePermissions = Partial<Record<AdminPageKey, MethodPerms>>;
+
 export interface Role {
   id: string;
   name: string;
   description: string;
-  permissions: AdminPageKey[];
+  permissions: PagePermissions;
 }
 
 export interface UserAssignment {
@@ -45,44 +59,59 @@ export interface UserAssignment {
   roleId: string;
 }
 
-const ROLES_KEY = "admin_roles";
-const ASSIGN_KEY = "admin_role_assignments";
+// ─── constants ────────────────────────────────────────────────────────────────
 
-const allKeys = ADMIN_PAGES.map((p) => p.key);
+const ALL_METHODS: MethodPerms = { get: true, post: true, put: true, delete: true };
+const READ_ONLY: MethodPerms = { get: true, post: false, put: false, delete: false };
+
+function fullAccess(): PagePermissions {
+  return Object.fromEntries(
+    ADMIN_PAGES.map((p) => [p.key, { ...ALL_METHODS }])
+  ) as PagePermissions;
+}
+
+// ─── default roles ────────────────────────────────────────────────────────────
 
 const defaultRoles: Role[] = [
   {
     id: "super_admin",
     name: "Super Admin",
     description: "Full access to every admin page",
-    permissions: [...allKeys],
+    permissions: fullAccess(),
   },
   {
     id: "manager",
     name: "Manager",
     description: "Manage orders, products, and content",
-    permissions: [
-      "dashboard",
-      "report",
-      "orders",
-      "products",
-      "categories",
-      "services",
-      "home-content",
-      "about-content",
-    ],
+    permissions: {
+      dashboard: { ...ALL_METHODS },
+      report: { ...READ_ONLY },
+      orders: { ...ALL_METHODS },
+      products: { ...ALL_METHODS },
+      categories: { ...ALL_METHODS },
+      services: { ...ALL_METHODS },
+      "home-content": { ...ALL_METHODS },
+      "about-content": { ...ALL_METHODS },
+    },
   },
   {
     id: "editor",
     name: "Editor",
     description: "Edit site content only",
-    permissions: ["dashboard", "home-content", "about-content"],
+    permissions: {
+      dashboard: { ...READ_ONLY },
+      "home-content": { ...ALL_METHODS },
+      "about-content": { ...ALL_METHODS },
+    },
   },
   {
     id: "viewer",
     name: "Viewer",
     description: "Read-only dashboard & reports",
-    permissions: ["dashboard", "report"],
+    permissions: {
+      dashboard: { ...READ_ONLY },
+      report: { ...READ_ONLY },
+    },
   },
 ];
 
@@ -90,11 +119,38 @@ const defaultAssignments: UserAssignment[] = [
   { email: "admin@firecrackers.com", roleId: "super_admin" },
 ];
 
+// ─── migration: old format had permissions: AdminPageKey[] ────────────────────
+
+function migrateRole(r: any): Role {
+  if (Array.isArray(r.permissions)) {
+    const perms: PagePermissions = {};
+    for (const key of r.permissions as AdminPageKey[]) {
+      perms[key] = { ...ALL_METHODS };
+    }
+    return { ...r, permissions: perms };
+  }
+  return r as Role;
+}
+
+// ─── localStorage store ───────────────────────────────────────────────────────
+
+const ROLES_KEY = "admin_roles";
+const ASSIGN_KEY = "admin_role_assignments";
+
 export const accessStore = {
   getRoles(): Role[] {
     try {
       const raw = localStorage.getItem(ROLES_KEY);
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          const migrated = parsed.map(migrateRole);
+          // Ensure super_admin always has full access
+          const sa = migrated.find((r) => r.id === "super_admin");
+          if (sa) sa.permissions = fullAccess();
+          return migrated;
+        }
+      }
     } catch {}
     localStorage.setItem(ROLES_KEY, JSON.stringify(defaultRoles));
     return defaultRoles;
@@ -117,9 +173,52 @@ export const accessStore = {
   },
 };
 
+// ─── pure utility ─────────────────────────────────────────────────────────────
+
+const NO_PERMS: MethodPerms = { get: false, post: false, put: false, delete: false };
+
+/**
+ * Return the effective method-level permissions for `email` on `pageKey`.
+ * Falls back to full access if the user has no assignment (backwards-compatible).
+ */
+export function getPagePerms(
+  roles: Role[],
+  assignments: UserAssignment[],
+  email: string | undefined,
+  pageKey: AdminPageKey
+): MethodPerms {
+  if (!email) return { ...NO_PERMS };
+
+  const assignment = assignments.find((a) => a.email === email);
+  // Unassigned admin users retain full access (backward-compatible)
+  if (!assignment) return { ...ALL_METHODS };
+
+  const role = roles.find((r) => r.id === assignment.roleId);
+  if (!role) return { ...NO_PERMS };
+
+  // super_admin always has full access regardless of stored value
+  if (role.id === "super_admin") return { ...ALL_METHODS };
+
+  return role.permissions[pageKey] ?? { ...NO_PERMS };
+}
+
+// ─── react hook ───────────────────────────────────────────────────────────────
+
+/**
+ * React hook — returns the current user's method-level permissions for a
+ * specific admin page. Re-renders automatically when roles/assignments change.
+ */
+export const usePagePermissions = (pageKey: AdminPageKey): MethodPerms => {
+  const { roles, assignments } = useAccessControl();
+  const email: string | undefined = adminAuth.current()?.email;
+  return getPagePerms(roles, assignments, email, pageKey);
+};
+
 export const useAccessControl = () => {
   const [roles, setRoles] = useState<Role[]>(accessStore.getRoles());
-  const [assignments, setAssignments] = useState<UserAssignment[]>(accessStore.getAssignments());
+  const [assignments, setAssignments] = useState<UserAssignment[]>(
+    accessStore.getAssignments()
+  );
 
   useEffect(() => {
     const h = () => {

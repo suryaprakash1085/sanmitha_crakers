@@ -14,11 +14,13 @@ import { TableFilters } from "@/components/admin/TableFilters";
 import { ImagePicker } from "@/components/admin/ImagePicker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { api } from "@/lib/api";
+import { usePagePermissions } from "@/hooks/useAccessControl";
 
 interface Product { id: number; name: string; price: number; discount_percent?: number; category: string; image: string; badge?: string; }
 interface CategoryOption { id: number; name: string; }
 
 export default function AdminProducts() {
+  const perms = usePagePermissions("products");
   const [items, setItems] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
@@ -107,7 +109,7 @@ export default function AdminProducts() {
           <span className="text-muted-foreground">—</span>
         ),
     },
-    { header: "Actions", cell: (p) => <RowActions onView={() => modal.openView(p)} onEdit={() => onEdit(p)} onDelete={() => modal.openDelete(p)} /> },
+    { header: "Actions", cell: (p) => <RowActions onView={() => modal.openView(p)} onEdit={perms.put ? () => onEdit(p) : undefined} onDelete={perms.delete ? () => modal.openDelete(p) : undefined} /> },
   ];
 
   return (
@@ -115,7 +117,7 @@ export default function AdminProducts() {
       <PageHeader
         title="Products"
         description="Manage your product catalog"
-        action={<Button onClick={onCreate}><Plus className="h-4 w-4" /> Add Product</Button>}
+        action={perms.post ? <Button onClick={onCreate}><Plus className="h-4 w-4" /> Add Product</Button> : undefined}
       />
       <TableFilters
         search={search}

@@ -13,10 +13,12 @@ import { ImagePicker } from "@/components/admin/ImagePicker";
 import { useCrudModal } from "@/hooks/useCrudModal";
 import { TableFilters } from "@/components/admin/TableFilters";
 import { api } from "@/lib/api";
+import { usePagePermissions } from "@/hooks/useAccessControl";
 
 interface Category { id: number; name: string; image: string | null; productCount: number; }
 
 export default function Categories() {
+  const perms = usePagePermissions("categories");
   const [items, setItems] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const modal = useCrudModal<Category>();
@@ -84,7 +86,7 @@ export default function Categories() {
     },
     { header: "Name", cell: (c) => c.name },
     { header: "Products", cell: (c) => c.productCount },
-    { header: "Actions", cell: (c) => <RowActions onView={() => modal.openView(c)} onEdit={() => onEdit(c)} onDelete={() => modal.openDelete(c)} /> },
+    { header: "Actions", cell: (c) => <RowActions onView={() => modal.openView(c)} onEdit={perms.put ? () => onEdit(c) : undefined} onDelete={perms.delete ? () => modal.openDelete(c) : undefined} /> },
   ];
 
   return (
@@ -92,7 +94,7 @@ export default function Categories() {
       <PageHeader
         title="Categories"
         description="Organize your products"
-        action={<Button onClick={onCreate}><Plus className="h-4 w-4" /> Add Category</Button>}
+        action={perms.post ? <Button onClick={onCreate}><Plus className="h-4 w-4" /> Add Category</Button> : undefined}
       />
       <TableFilters search={search} onSearchChange={setSearch} placeholder="Search categories..." />
       <DataTable columns={columns} data={filtered} rowKey={(c) => c.id} empty={loading ? "Loading..." : "No categories found"} />

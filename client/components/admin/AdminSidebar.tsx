@@ -1,4 +1,19 @@
-import { LayoutDashboard, Users, Wrench, FolderTree, Package, ShoppingCart, Building2, Palette, FileText, LogOut, Zap, Mail, BarChart3, Home, Info,Shield } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  Wrench,
+  FolderTree,
+  Package,
+  ShoppingCart,
+  Building2,
+  Palette,
+  FileText,
+  LogOut,
+  Zap,
+  Mail,
+  BarChart3,
+  Shield,
+} from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -11,26 +26,37 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { adminAuth } from "@/hooks/useAdminAuth";
+import { useAccessControl, getPagePerms, type AdminPageKey } from "@/hooks/useAccessControl";
 
-const items = [
-  { title: "Dashboard", url: "/admin", icon: LayoutDashboard, end: true },
-  { title: "Reports", url: "/admin/report", icon: BarChart3 },
-  { title: "Orders", url: "/admin/orders", icon: ShoppingCart },
-  { title: "Products", url: "/admin/products", icon: Package },
-  { title: "Categories", url: "/admin/categories", icon: FolderTree },
-  { title: "Services", url: "/admin/services", icon: Wrench },
-  { title: "Users", url: "/admin/users", icon: Users },
-  { title: "Company", url: "/admin/company", icon: Building2 },
-  { title: "Customization", url: "/admin/customization", icon: Palette },
-  { title: "PDF Template", url: "/admin/pdf-template", icon: FileText },
-  { title: "Email Settings", url: "/admin/email-settings", icon: Mail },
-   { title: "Access Control", url: "/admin/access-control", icon: Shield }
+const items: { title: string; url: string; icon: React.ElementType; end?: boolean; pageKey: AdminPageKey }[] = [
+  { title: "Dashboard",      url: "/admin",                icon: LayoutDashboard, end: true, pageKey: "dashboard"      },
+  { title: "Reports",        url: "/admin/report",         icon: BarChart3,                  pageKey: "report"         },
+  { title: "Orders",         url: "/admin/orders",         icon: ShoppingCart,               pageKey: "orders"         },
+  { title: "Products",       url: "/admin/products",       icon: Package,                    pageKey: "products"       },
+  { title: "Categories",     url: "/admin/categories",     icon: FolderTree,                 pageKey: "categories"     },
+  { title: "Services",       url: "/admin/services",       icon: Wrench,                     pageKey: "services"       },
+  { title: "Users",          url: "/admin/users",          icon: Users,                      pageKey: "users"          },
+  { title: "Company",        url: "/admin/company",        icon: Building2,                  pageKey: "company"        },
+  { title: "Customization",  url: "/admin/customization",  icon: Palette,                    pageKey: "customization"  },
+  { title: "PDF Template",   url: "/admin/pdf-template",   icon: FileText,                   pageKey: "pdf-template"   },
+  { title: "Email Settings", url: "/admin/email-settings", icon: Mail,                       pageKey: "email-settings" },
+  { title: "Access Control", url: "/admin/access-control", icon: Shield,                     pageKey: "access-control" },
 ];
 
 export function AdminSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const navigate = useNavigate();
+
+  const { roles, assignments } = useAccessControl();
+  const currentUser = adminAuth.current();
+  const userEmail = currentUser?.email;
+
+  // Only show items where the current user has GET permission
+  const visibleItems = items.filter((item) => {
+    const perms = getPagePerms(roles, assignments, userEmail, item.pageKey);
+    return perms.get;
+  });
 
   const handleLogout = () => {
     adminAuth.signOut();
@@ -62,7 +88,7 @@ export function AdminSidebar() {
               </div>
             )}
             <SidebarMenu className="gap-1.5 px-3">
-              {items.map((item) => (
+              {visibleItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild className="hover:bg-transparent">
                     <NavLink

@@ -14,6 +14,7 @@ import { useCrudModal } from "@/hooks/useCrudModal";
 import { TableFilters } from "@/components/admin/TableFilters";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
+import { usePagePermissions } from "@/hooks/useAccessControl";
 
 type Role = "admin" | "customer";
 interface User { id: number; name?: string; email: string; phone?: string; role: Role; created_at: string; }
@@ -21,6 +22,7 @@ interface User { id: number; name?: string; email: string; phone?: string; role:
 const emptyForm = { name: "", email: "", phone: "", password: "", role: "customer" as Role };
 
 export default function Users() {
+  const perms = usePagePermissions("users");
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const modal = useCrudModal<User>();
@@ -87,7 +89,7 @@ export default function Users() {
     { header: "Phone", cell: (u) => u.phone || "—" },
     { header: "Role", cell: (u) => <Badge variant={u.role === "admin" ? "default" : "secondary"}>{u.role}</Badge> },
     { header: "Joined", cell: (u) => String(u.created_at).slice(0, 10) },
-    { header: "Actions", cell: (u) => <RowActions onView={() => modal.openView(u)} onEdit={() => onEdit(u)} onDelete={() => modal.openDelete(u)} /> },
+    { header: "Actions", cell: (u) => <RowActions onView={() => modal.openView(u)} onEdit={perms.put ? () => onEdit(u) : undefined} onDelete={perms.delete ? () => modal.openDelete(u) : undefined} /> },
   ];
 
   return (
@@ -95,7 +97,7 @@ export default function Users() {
       <PageHeader
         title="Users"
         description="Registered users"
-        action={<Button onClick={onCreate}><Plus className="h-4 w-4" /> Add User</Button>}
+        action={perms.post ? <Button onClick={onCreate}><Plus className="h-4 w-4" /> Add User</Button> : undefined}
       />
       <TableFilters
         search={search}
