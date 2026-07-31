@@ -4,6 +4,7 @@ import { Layout } from "@/components/Layout";
 import { FloatingSparks } from "@/components/FloatingSparks";
 import { SparkButton } from "@/components/SparkButton";
 import { Tilt3D } from "@/components/Tilt3D";
+import { Hero3D } from "@/components/Hero3D";
 import { ProductCard } from "@/components/ProductCard";
 import { useProducts } from "@/hooks/useProducts";
 import heroImg from "@/assets/hero-crackers.png";
@@ -32,8 +33,8 @@ const Index = () => {
     <Layout>
       {/* HERO */}
       {h.hero.show && (
-        <section className="relative min-h-[88vh] overflow-hidden">
-          <div className="container-festive relative z-10 grid lg:grid-cols-2 gap-8 items-center pt-8 pb-20">
+        <section className="relative min-h-[88vh] overflow-hidden section-festive-gradient">
+          <div className="container-festive relative z-10 grid lg:grid-cols-2 gap-8 items-center pt-8 pb-20 px-4 md:px-8">
             <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7 }}>
               {h.hero.badge && (
                 <span
@@ -43,12 +44,12 @@ const Index = () => {
                   <Icon name="Flame" className="w-3.5 h-3.5" /> {h.hero.badge}
                 </span>
               )}
-               <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold leading-[1.1] mb-5 break-words text-white">
+               <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold leading-[1.1] mb-5 break-words text-gray-900">
                 {h.hero.title}
                 <br />
                 <span className="text-gradient-festive">{h.hero.titleHighlight}</span>
               </h1>
-               <p className="text-lg text-muted-foreground max-w-md mb-8">{h.hero.subtitle}</p>
+               <p className="text-lg text-gray-500 max-w-md mb-8">{h.hero.subtitle}</p>
               <div className="flex flex-wrap gap-3">
                 {h.hero.ctaPrimary && (
                   <Link to={h.hero.ctaPrimaryLink || "/products"}>
@@ -67,16 +68,24 @@ const Index = () => {
               initial={{ opacity: 0, scale: 0.85, y: 30 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{ duration: 0.9, delay: 0.2, ease: [0.34, 1.56, 0.64, 1] }}
-              className="relative"
+              className="relative flex items-center justify-center"
             >
-              <div className="absolute inset-0 bg-festive blur-3xl opacity-20 -z-10 animate-pulse" />
-              <Tilt3D max={8} lift={20} className="mx-auto max-w-xl">
+              {/* Soft ambient glow behind 3D display */}
+              <div
+                className="absolute inset-0 -z-10 rounded-full blur-3xl"
+                style={{
+                  background:
+                    "radial-gradient(ellipse at center, hsl(316 80% 55% / .10) 0%, hsl(263 70% 55% / .08) 50%, transparent 80%)",
+                }}
+              />
+              {/* 3D orbiting animation as hero graphic */}
+              <Hero3D />
+              {/* Hero product image layered behind the 3D rings */}
+              <Tilt3D max={6} lift={12} className="absolute inset-0 flex items-center justify-center -z-10 pointer-events-none">
                 <img
                   src={h.hero.image || heroImg}
                   alt="Festive fire crackers display"
-                  width={1280}
-                  height={1024}
-                  className="w-full drop-shadow-2xl"
+                  className="w-48 lg:w-64 object-contain drop-shadow-2xl opacity-80"
                 />
               </Tilt3D>
             </motion.div>
@@ -185,17 +194,21 @@ const Index = () => {
               initial={{ opacity: 0, scale: 0.96 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              className="relative overflow-hidden rounded-3xl bg-pink-festive shadow-soft p-8 md:p-12 grid md:grid-cols-2 gap-6 items-center text-white"
+              className="relative overflow-hidden rounded-3xl p-8 md:p-12 grid md:grid-cols-2 gap-6 items-center text-white"
+              style={{ background: "linear-gradient(135deg, hsl(316 85% 52%), hsl(263 70% 52%) 52%, hsl(23 90% 52%))" }}
             >
-              <FloatingSparks count={12} />
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-white/10 blur-3xl" />
+                <div className="absolute -bottom-20 -right-20 w-64 h-64 rounded-full bg-white/10 blur-3xl" />
+              </div>
               <div className="relative z-10">
                 {h.offer.badge && (
-                  <span className="glow-badge mb-4 !bg-white/15 !text-white backdrop-blur-sm">
+                  <span className="glow-badge mb-4 !bg-white/20 !text-white backdrop-blur-sm border border-white/20">
                     {h.offer.badge}
                   </span>
                 )}
-                <h2 className="font-display text-3xl md:text-5xl font-bold mb-3">
-                  {h.offer.title} <span className="text-gradient-gold">{h.offer.titleHighlight}</span>
+                <h2 className="font-display text-3xl md:text-5xl font-bold mb-3 text-white">
+                  {h.offer.title} <span className="text-yellow-200">{h.offer.titleHighlight}</span>
                 </h2>
                 <p className="text-white/80 mb-6 max-w-md">{h.offer.description}</p>
                 {h.offer.cta && (
@@ -238,7 +251,7 @@ const Index = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
-                  className="glass-card rounded-3xl p-6 text-center group hover:-translate-y-2 transition-transform"
+                  className="bg-white border border-gray-100 shadow-md rounded-3xl p-6 text-center group hover:-translate-y-2 hover:shadow-xl hover:border-pink-200 transition-all duration-300"
                 >
                   <div
                     className="w-16 h-16 mx-auto rounded-2xl grid place-items-center mb-4 group-hover:animate-wiggle"
@@ -250,7 +263,7 @@ const Index = () => {
                     <Icon name={w.icon} className="w-7 h-7" style={{ color: `hsl(${w.colorHue} 80% 45%)` }} />
                   </div>
                   <h3 className="font-display font-semibold text-lg mb-1">{w.title}</h3>
-                  <p className="text-sm text-muted-foreground">{w.desc}</p>
+                  <p className="text-sm text-gray-500">{w.desc}</p>
                 </motion.div>
               ))}
             </div>

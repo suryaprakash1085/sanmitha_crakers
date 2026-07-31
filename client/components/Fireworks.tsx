@@ -224,7 +224,7 @@ export const Fireworks = () => {
     <canvas
       ref={canvasRef}
       aria-hidden="true"
-      className="fixed inset-0 z-[55] pointer-events-none opacity-80"
+      className="fixed inset-0 z-[55] pointer-events-none opacity-40"
     />
   );
 };

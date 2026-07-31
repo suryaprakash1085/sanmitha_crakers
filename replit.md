@@ -22,6 +22,8 @@ The Vite dev server proxies `/api/*` requests to the embedded Express app.
 
 **Note:** `DATABASE_HOST` must be your actual MySQL server's public hostname or IP.
 On Replit, `localhost` has no MySQL — set the host to your cPanel/remote server address.
+The app frontend loads fully on Replit; only API calls that need the DB will error until
+a real MySQL host is configured.
 
 ## Building for cPanel (Production)
 ```
@@ -32,7 +34,7 @@ After building, cPanel starts `server.mjs`, which imports the compiled server.
 ## Environment Variables
 | Key               | Description                        |
 |-------------------|------------------------------------|
-| DATABASE_HOST     | MySQL host (usually localhost)      |
+| DATABASE_HOST     | MySQL host (your remote/cPanel host, NOT localhost on Replit) |
 | DATABASE_PORT     | MySQL port (3306)                  |
 | DATABASE_NAME     | Database name                      |
 | DATABASE_USER     | Database user                      |
@@ -40,6 +42,12 @@ After building, cPanel starts `server.mjs`, which imports the compiled server.
 | JWT_SECRET        | JWT signing secret (secret)        |
 | PORT              | Server port (cPanel: 3001)         |
 | NODE_ENV          | `development` or `production`      |
+
+## Design Theme
+- **User-facing pages**: White / light theme with festive pink-purple-orange gradient accents
+- **3D animations**: Hero section has orbiting 3D ring animation (`Hero3D` component) + Tilt3D on cards
+- **Admin panel**: White with purple/violet accents (unchanged)
+- Key component files for design: `client/index.css`, `client/components/Layout.tsx`, `client/components/Navbar.tsx`, `client/components/Hero3D.tsx`
 
 ## Database
 ```
@@ -57,3 +65,4 @@ npm run db:seed      # Seed the database
 
 ## User Preferences
 - Keep existing project structure and stack.
+- User-side uses white/light theme with 3D animations.
